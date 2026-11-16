@@ -4,7 +4,7 @@ services:
     name: thesis-ledger-account-monitor
     runtime: docker
     repo: https://github.com/hibaa8/trading-thesis-ledger
-    branch: codex/initial-build
+    branch: main
     plan: starter
     dockerCommand: python -m ledger.worker
     schedule: "45 13-21 * * 1-5"
