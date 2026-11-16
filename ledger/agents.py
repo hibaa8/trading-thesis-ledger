@@ -14,7 +14,8 @@ ROLES = {
     ),
     "reflection": (
         "Review prior recorded theses against observed broker outcomes. Separate filled trades, "
-        "pending suggestions and untraded research. Identify a testable assumption that should be "
+        "pending suggestions and untraded research. Attribute a trade only through explicit matching "
+        "approval/order IDs in broker_events, never merely a shared symbol. Identify a testable assumption that should be "
         "revisited, or abstain when there are no outcomes. Never infer profitability from deposits "
         "or treat one outcome as a proven rule. Cite the supplied observation IDs."
     ),

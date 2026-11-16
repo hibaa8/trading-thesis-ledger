@@ -173,7 +173,13 @@ async def private_cycle(harness, planner, tickers, amount_usd=20):
             observation = dict(id=snapshot["id"], kind="broker", title="Observed Robinhood outcomes",
                 text=dict(realized_pnl=account["realized_pnl"], unrealized_pnl=account["unrealized_pnl"],
                           positions=account["positions"], orders=account["orders"],
-                          prior_decisions=[item["payload"].get("selection") for item in prior]))
+                          broker_events=[event["payload"] for event in dashboard.get("events", [])],
+                          prior_decisions=[dict(selection=item["payload"].get("selection"),
+                              proposal=item["payload"].get("proposal"),
+                              candidates=[dict(ticker=c["ticker"], decision=c.get("decision"),
+                                               exclusion_reason=c.get("exclusion_reason"))
+                                          for c in item["payload"].get("candidates", [])])
+                              for item in prior]))
             experience = await analyze("reflection", {"evidence": [observation]}, "live")
         result = await compare_candidates(harness, planner, symbols, amount_usd,
             positions=positions, buy_budget=float(dashboard["funding"]["remaining"]), experience=experience)
