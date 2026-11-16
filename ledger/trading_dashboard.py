@@ -86,6 +86,10 @@ def funding_status(snapshot, events):
 
 def merge_trading_record(record, records):
     """Preserve broker lifecycle evidence and atomically reserve the trial budget."""
+    if record["kind"] == "trading_request":
+        previous = next((r for r in records if r["kind"] == "trading_request" and r["id"] == record["id"]), None)
+        if previous and previous["payload"].get("status") == "cancelled":
+            return previous
     if record["kind"] != "trade_event":
         return record
     previous = next((r for r in records if r["kind"] == "trade_event" and r["id"] == record["id"]), None)

@@ -43,11 +43,23 @@ class PostgresStore:
         with self._db() as db:
             db.execute("SELECT pg_advisory_xact_lock(hashtext('thesis-ledger-trial-budget'))")
             rows = db.execute("SELECT payload FROM thesis_ledger.records WHERE workspace='owner' "
-                              "AND kind IN ('broker_snapshot','trade_event')").fetchall()
+                              "AND kind IN ('broker_snapshot','trade_event','trading_request')").fetchall()
             record = merge_trading_record(record, [row[0] for row in rows])
             db.execute("INSERT INTO thesis_ledger.records VALUES (%s,%s,%s,%s,%s) "
                        "ON CONFLICT (workspace,kind,id) DO UPDATE SET payload=excluded.payload",
                        ("owner", record["kind"], record["id"], record["created"], Jsonb(record)))
+
+    def cancel_trading_request(self, request_id):
+        with self._db() as db:
+            db.execute("SELECT pg_advisory_xact_lock(hashtext('thesis-ledger-trial-budget'))")
+            row = db.execute("SELECT payload FROM thesis_ledger.records WHERE workspace='owner' AND kind='trading_request' AND id=%s FOR UPDATE", (request_id,)).fetchone()
+            if not row:
+                raise KeyError(request_id)
+            record = row[0]
+            if record["payload"].get("status") not in {"queued", "cancelled"}:
+                raise ValueError("Only queued reviews can be removed")
+            record["payload"].update(status="cancelled", cancelled_at=now())
+            db.execute("UPDATE thesis_ledger.records SET payload=%s WHERE workspace='owner' AND kind='trading_request' AND id=%s", (Jsonb(record), request_id))
 
     def trading_access_digest(self):
         with self._db() as db:

@@ -262,6 +262,16 @@ def create_app(directory=None):
     def private_trading():
         return trading_view(store)
 
+    @app.delete("/api/trading/requests/{request_id}")
+    def cancel_trading_request(request_id: str):
+        try:
+            store.cancel_trading_request(request_id)
+        except KeyError:
+            raise HTTPException(404, "Queued review not found") from None
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+        return {"id": request_id, "status": "cancelled"}
+
     @app.post("/api/trading/records")
     def sync_trading_record(record: TradingRecord):
         try:

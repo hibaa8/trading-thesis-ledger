@@ -80,3 +80,28 @@ def test_multiple_buy_proposals_cannot_reserve_same_trial_cash(tmp_path):
     events=[r for r in store.trading_records() if r["kind"]=="trade_event"]
     assert len(events)==1
     assert events[0]["payload"]["history"][0]["state"]=="review_requested"
+
+
+def test_remove_queued_review_is_private_and_cannot_be_resurrected(tmp_path, monkeypatch):
+    monkeypatch.setenv("LEDGER_PUBLIC", "1")
+    monkeypatch.setenv("LEDGER_API_TOKEN", "workspace-secret")
+    monkeypatch.setenv("LEDGER_TRADING_TOKEN", "owner-secret")
+    headers = {"Authorization": "Bearer owner-secret"}
+    record = dict(id="review1", kind="trading_request", created="2026-11-16T20:41:08Z",
+                  payload={"tickers": ["AAOI", "AXTI", "MRVL"], "status": "queued"})
+    with TestClient(create_app(tmp_path), base_url="http://localhost") as client:
+        assert client.post("/api/trading/records", headers=headers, json=record).status_code == 200
+        path = "/api/trading/requests/review1"
+        assert client.delete(path).status_code == 401
+        assert client.delete(path, headers={**headers, "Origin": "https://evil.example"}).status_code == 403
+        assert client.delete(path, headers=headers).status_code == 200
+        assert client.delete(path, headers=headers).status_code == 200
+        # A worker holding an older copy cannot resurrect a cancelled request.
+        record["payload"]["status"] = "complete"
+        assert client.post("/api/trading/records", headers=headers, json=record).status_code == 200
+        requests = client.get("/api/trading", headers=headers).json()["requests"]
+        assert requests[0]["payload"]["status"] == "cancelled"
+        assert client.delete("/api/trading/requests/missing", headers=headers).status_code == 404
+        record["id"] = "completed"
+        assert client.post("/api/trading/records", headers=headers, json=record).status_code == 200
+        assert client.delete("/api/trading/requests/completed", headers=headers).status_code == 409

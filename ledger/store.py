@@ -176,6 +176,18 @@ class Store:
                        "ON CONFLICT(kind,id) DO UPDATE SET payload=excluded.payload",
                        (record["kind"], record["id"], record["created"], json.dumps(record)))
 
+    def cancel_trading_request(self, request_id):
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT payload FROM trading_records WHERE kind='trading_request' AND id=?", (request_id,)).fetchone()
+            if not row:
+                raise KeyError(request_id)
+            record = json.loads(row[0])
+            if record["payload"].get("status") not in {"queued", "cancelled"}:
+                raise ValueError("Only queued reviews can be removed")
+            record["payload"].update(status="cancelled", cancelled_at=now())
+            db.execute("UPDATE trading_records SET payload=? WHERE kind='trading_request' AND id=?", (json.dumps(record), request_id))
+
     def trading_access_digest(self):
         with self.connect() as db:
             row = db.execute("SELECT payload FROM trading_records WHERE kind='trading_access' AND id='owner'").fetchone()
