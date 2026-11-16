@@ -281,10 +281,20 @@ def create_app(directory=None):
             return {"connected": False, "configured": False, "mode": "read_only"}
 
     @app.post("/api/trading/broker/connect")
-    async def broker_connect():
-        from .broker import BrokerVault
+    async def broker_connect(request: Request):
+        from .broker import BrokerVault, BrokerOAuthError, callback_url
+        try:
+            configured_callback = callback_url()
+        except ValueError:
+            raise HTTPException(503, "Configure a valid HTTPS broker callback URL") from None
+        if urlparse(configured_callback).netloc != request.headers.get("host"):
+            raise HTTPException(503, "The broker callback host must match this app's host")
         try:
             url, state = await asyncio.to_thread(BrokerVault(store).begin)
+        except BrokerOAuthError as exc:
+            raise HTTPException(503, "Robinhood registration failed at " + exc.stage) from None
+        except httpx.HTTPStatusError as exc:
+            raise HTTPException(503, "Robinhood registration returned HTTP " + str(exc.response.status_code)) from None
         except Exception:
             raise HTTPException(503, "Hosted Robinhood connection is not ready. Check the encryption secret and database configuration.") from None
         response = JSONResponse({"url": url})
@@ -292,12 +302,14 @@ def create_app(directory=None):
         return response
 
     @app.get("/broker/callback")
-    async def broker_callback(request: Request, code: str = "", state: str = ""):
-        from .broker import BrokerVault
+    async def broker_callback(request: Request, code: str = "", state: str = "", iss: str = "", error: str = ""):
+        from .broker import BrokerVault, BrokerOAuthError
         try:
-            await asyncio.to_thread(BrokerVault(store).finish, code, state, request.cookies.get("ledger-broker-state", ""))
+            await asyncio.to_thread(BrokerVault(store).finish, code, state, request.cookies.get("ledger-broker-state", ""), iss, error)
+        except BrokerOAuthError as exc:
+            return JSONResponse({"detail": "Robinhood authorization failed. Return to Trading and connect again.", "stage": exc.stage}, status_code=400, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
         except Exception:
-            return JSONResponse({"detail": "Robinhood authorization failed or expired. Return to Trading and connect again."}, status_code=400, headers={"Cache-Control": "no-store"})
+            return JSONResponse({"detail": "Robinhood authorization could not complete. Check the hosted connection configuration."}, status_code=400, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
         response = RedirectResponse("/#trading", status_code=303, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
         response.delete_cookie("ledger-broker-state", path="/broker/callback")
         return response
