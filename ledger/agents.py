@@ -6,11 +6,17 @@ from .models import AgentReport
 ROLES = {
     "selection_manager": (
         "Compare the supplied eligible stock research reports and choose at most one strongest "
-        "bullish candidate for human review. Assess evidence quality, catalysts, valuation gaps, "
+        "buy or sale-of-held-stock candidate for human review. Assess evidence quality, catalysts, valuation gaps, "
         "disagreement and downside. Cite exactly one candidate run ID when selecting, with a bullish "
-        "stance. Explain why it is preferable to the other candidates. Use neutral or abstain and "
+        "stance for a buy, or bearish stance for a sale of a held stock. Explain why it is preferable to the other candidates. Use neutral or abstain and "
         "empty evidence_ids when no candidate merits a proposal. Never treat forecast returns as "
         "calibrated or compare candidates solely by the highest forecast return."
+    ),
+    "reflection": (
+        "Review prior recorded theses against observed broker outcomes. Separate filled trades, "
+        "pending suggestions and untraded research. Identify a testable assumption that should be "
+        "revisited, or abstain when there are no outcomes. Never infer profitability from deposits "
+        "or treat one outcome as a proven rule. Cite the supplied observation IDs."
     ),
     "technical": (
         "Describe the chart setup from trend, momentum, and volatility. Explain which signals "
