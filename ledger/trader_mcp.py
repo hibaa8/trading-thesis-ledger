@@ -74,7 +74,9 @@ def create_trader_mcp(store=None):
             detail: str = "") -> dict:
         """Record an actual broker review, pending approval, approval decline, expiration or fill. Use a stable proposal ID as id/ref_id, reconcile the broker response before changing state, and never mark an approval filled. Record submission_unknown on a transport error and reuse the same ref_id when reconciling. Does not submit orders."""
         allowed = {"review_requested", "awaiting_approval", "submission_unknown", "declined", "expired",
-                   "rejected", "approved", "queued", "partially_filled", "filled", "cancelled", "blocked"}
+                   "rejected", "approved", "queued", "partially_filled", "filled", "cancelled", "blocked",
+                   "new", "confirmed", "unconfirmed", "failed", "voided", "pending_cancelled",
+                   "partially_filled_rest_cancelled"}
         if state not in allowed or side not in {"buy", "sell"}:
             raise ValueError("Invalid broker event state or side")
         _cents(amount_usd)
