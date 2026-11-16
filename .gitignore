@@ -11,3 +11,7 @@ vendor/
 .venv-arm/
 
 supabase/.temp/
+
+frontend/node_modules/
+ledger/web/react/
+.taste-skill/
