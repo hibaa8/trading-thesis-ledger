@@ -47,8 +47,8 @@ flowchart TD
     D --> M["Research manager"]
     F --> M
     M --> R["Risk review and report"]
-    R --> DB["SQLite · reports, theses, revisions, chat history"]
-    Chat --> DB
+    R --> DB["Research ledger · Supabase Postgres hosted / SQLite local"]
+    Chat --> Local["SQLite · chat history and forecast cache"]
     DB -->|Date-filtered thesis retrieval| H
     UI -->|Review a thesis| DB
 ```
@@ -57,7 +57,7 @@ I keep forecasts separate until synthesis so analysts can form and challenge a t
 
 ## MCP and hosting
 
-The hosted app exposes public market tools at `/mcp/public/`. The full toolkit is available through the token-protected `/mcp/` endpoint or local stdio with `uv run thesis-ledger-mcp`. The tools cover the market brief, latest price, research, saved reports, recovery, thesis search, and thesis review. See the [deployment and MCP guide](docs/deployment.md) for client configuration and a free Render deployment. SQLite persists on local disk; Render's free filesystem is ephemeral.
+The hosted app exposes public market tools at `/mcp/public/`. The full toolkit is available through the token-protected `/mcp/` endpoint or local stdio with `uv run thesis-ledger-mcp`. The tools cover the market brief, latest price, research, saved reports, recovery, thesis search, and thesis review. See the [deployment and MCP guide](docs/deployment.md) for client configuration and a free Render deployment. Hosted research history uses Supabase Postgres when `LEDGER_DATABASE_URL` is configured; local runs use SQLite. Render's free filesystem is ephemeral for local-only data such as chat history.
 
 ## Papers that inspired this project
 

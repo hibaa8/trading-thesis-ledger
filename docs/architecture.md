@@ -20,8 +20,8 @@ flowchart TD
     D --> M["Research manager"]
     F --> M
     M --> R["Risk review and report"]
-    R --> DB["SQLite · reports, theses, revisions, chat history"]
-    Chat --> DB
+    R --> DB["Research ledger · Supabase Postgres hosted / SQLite local"]
+    Chat --> Local["SQLite · chat history and forecast cache"]
     DB -->|Date-filtered thesis retrieval| H
     UI -->|Review a thesis| DB
 ```
