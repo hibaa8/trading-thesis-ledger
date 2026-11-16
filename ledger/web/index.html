@@ -278,7 +278,7 @@
           <h2>Open your private trading view</h2>
           <label for="trading-key">Trading access key</label>
           <div class="trading-key-row"><input id="trading-key" type="password" autocomplete="off" required />
-            <button type="submit">Open trading view</button></div>
+            <button class="primary" type="submit">Open trading view</button></div>
           <p>Use the private key from your local project’s environment settings.</p>
         </form>
         <p id="trading-status" role="status"></p>
@@ -300,7 +300,7 @@
             <form id="trading-request" class="panel trading-request">
               <label for="trading-symbols">Stocks and ETFs to review</label>
               <input id="trading-symbols" value="SPY, AMZN, GOOGL" aria-describedby="trading-request-note" />
-              <button type="submit">Request agent review</button>
+              <button class="primary" type="submit">Request agent review</button>
               <p id="trading-request-note">Queued reviews run at the next scheduled agent check. Held stocks are included in sell reviews.</p>
             </form>
             <div id="trading-cycles"></div>
