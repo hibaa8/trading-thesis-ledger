@@ -1,0 +1,19 @@
+# Hosted Robinhood OAuth audit — November 16, 2026
+
+This audit checks our implementation before attributing the failed consent flow to Robinhood. The generic Robinhood error page does not establish its cause. The local Codex connection and the custom hosted client are separate OAuth grants.
+
+| Check | Evidence and result |
+| --- | --- |
+| Provider endpoints and scope | Live protected-resource and authorization-server metadata match the MCP resource, issuer, registration, authorization and token endpoints used by the client. Scope `internal`, public-client authentication `none`, authorization code/refresh grants and PKCE `S256` are advertised. |
+| Public callback routing | A real HTTPS GET to `/broker/callback` reaches the app and returns a controlled 400 with `Cache-Control: no-store`, without an application access token. It is not blocked by the private API middleware or a missing route. TLS verification remains enabled. |
+| Callback consistency | Previously the callback environment setting was ignored, although the hardcoded value matched production. The setting is now explicit in the web Blueprint and is used for registration and authorization; the exact starting URI is retained for code exchange. Wrong hosts, HTTP, query strings and incorrect paths are rejected. |
+| Registration | Cached registrations are refreshed when their version or redirect changes. Registration responses must include the exact requested redirect and public-client authentication. `application_type=web` is explicit. Registration metadata acceptance does not prove that consent will complete. |
+| PKCE | The generated challenge passes the RFC 7636 Appendix B test vector. The verifier is server-side and encrypted, and is sent only in the form-encoded token request. |
+| Browser state and cookie | The full simulated HTTPS browser flow passes: private connect endpoint, host-only Secure/HttpOnly/SameSite=Lax cookie scoped to `/broker/callback`, state match, code exchange, cookie removal and 303 return to Trading. Wrong or expired state cannot exchange a code. |
+| Issuer validation | The old callback ignored `iss`, despite Robinhood advertising issuer-bound responses. This was a defect. The callback now requires the advertised issuer before code exchange, including on provider error responses. This strengthens a callback that arrives; it does not explain the earlier error before the app callback. |
+| Diagnostics | Private connection status now reports an allowlisted OAuth stage and timestamp. Invalid unsolicited callbacks cannot overwrite the active flow's diagnostics. Raw codes, state, verifier, token values and provider error descriptions are not returned in status. Callback query strings are redacted from access logs. |
+| Storage and trade boundary | Credentials remain encrypted in the owner-only Supabase record. Read-only status checks no longer rewrite credentials. The hosted MCP client still rejects every order/watchlist mutation. |
+
+The successful browser/token exchange tests use mocked provider responses. They do **not** prove that Robinhood issued a real hosted grant. A successful real consent redirect and a read-only account call are still required before calling this connection working. The previous generic provider error is not enough to conclude that the callback is unsupported or needs allowlisting.
+
+Sources: [live protected-resource metadata](https://agent.robinhood.com/.well-known/oauth-protected-resource/mcp/trading), [authorization-server metadata](https://agent.robinhood.com/.well-known/oauth-authorization-server/mcp/trading), [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization), [RFC 7636](https://www.rfc-editor.org/rfc/rfc7636.html#appendix-B), [RFC 9207](https://www.rfc-editor.org/rfc/rfc9207.html).
