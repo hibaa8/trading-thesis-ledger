@@ -1,5 +1,6 @@
 """Private dashboard records and a bridge from the connected Robinhood MCP."""
 
+import asyncio
 import os
 import uuid
 from datetime import datetime, timezone
@@ -94,6 +95,9 @@ def merge_trading_record(record, records):
         for key in ("symbol", "side", "amount_usd", "proposal_id"):
             if old.get(key) != item.get(key):
                 raise ValueError("A proposal's stock, side and amount cannot change")
+        for key in ("approval_id", "order_id"):
+            if not item.get(key):
+                item[key] = old.get(key, "")
         history = list(old.get("history", []))
         if old.get("state") != item.get("state"):
             history.append(dict(state=old.get("state"), recorded_at=previous["created"], detail=old.get("detail", "")))
@@ -185,28 +189,36 @@ def broker_snapshot(portfolio, positions, quotes, orders, approvals, setting, re
     return TradingRecord(id=uuid.uuid4().hex, kind="broker_snapshot", created=now(), payload=payload)
 
 
-async def publish_record(record):
+async def dashboard_request(method, path, payload=None):
     token = os.getenv("LEDGER_TRADING_TOKEN")
     if not token:
         raise ValueError("Configure LEDGER_TRADING_TOKEN for the private dashboard")
     base = os.getenv("LEDGER_DASHBOARD_URL", "https://thesis-ledger.onrender.com").rstrip("/")
     if not base.startswith("https://") and not base.startswith("http://127.0.0.1:"):
         raise ValueError("Dashboard sync requires HTTPS")
-    async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.post(base + "/api/trading/records",
-            headers={"Authorization": "Bearer " + token}, json=record.model_dump(mode="json"))
-        if response.status_code not in (200, 201):
-            raise ValueError(f"Private dashboard sync failed (HTTP {response.status_code})")
+    async with httpx.AsyncClient(timeout=httpx.Timeout(90, connect=10)) as client:
+        for attempt in range(2):
+            try:
+                response = await client.request(method, base + path,
+                    headers={"Authorization": "Bearer " + token}, json=payload)
+            except httpx.HTTPError:
+                if attempt:
+                    raise ValueError("The private dashboard could not be reached") from None
+                await asyncio.sleep(2)
+                continue
+            if response.status_code in {502, 503, 504} and not attempt:
+                await asyncio.sleep(2)
+                continue
+            if response.status_code not in (200, 201):
+                raise ValueError(f"Private dashboard request failed (HTTP {response.status_code})")
+            return response.json()
+
+
+async def publish_record(record):
+    # A retry sends the same record ID, preserving idempotency across service restarts.
+    await dashboard_request("POST", "/api/trading/records", record.model_dump(mode="json"))
     return dict(id=record.id, kind=record.kind, synced=True)
 
 
 async def dashboard_state():
-    token = os.getenv("LEDGER_TRADING_TOKEN")
-    if not token:
-        raise ValueError("Configure LEDGER_TRADING_TOKEN for the private dashboard")
-    base = os.getenv("LEDGER_DASHBOARD_URL", "https://thesis-ledger.onrender.com").rstrip("/")
-    async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.get(base + "/api/trading", headers={"Authorization": "Bearer " + token})
-        if response.status_code != 200:
-            raise ValueError(f"Private dashboard read failed (HTTP {response.status_code})")
-        return response.json()
+    return await dashboard_request("GET", "/api/trading")
