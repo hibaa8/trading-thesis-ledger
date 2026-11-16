@@ -58,6 +58,9 @@
   }
   function render(data) {
     renderReviews(data);
+    if (data.worker) $("trading-broker-status").textContent = `${data.worker.payload.detail} Last check: ${time(data.worker.payload.last_updated_at)}`;
+    const brief = data.market_observation?.payload;
+    $("trading-market-observation").innerHTML = brief ? `<h3>Latest market observations</h3><p>${esc(time(data.market_observation.created))}</p>${(brief.headlines || []).slice(0,5).map(h=>sourceTitle(h)).join(" ")}` : "";
     const record = data.snapshot;
     if (!record) {
       note("Waiting for the first Robinhood sync from the connected agent.");
@@ -120,6 +123,19 @@
     await window.openTrading();
   };
   if ($("trading").classList.contains("active")) window.openTrading();
+  $("trading-broker-connect").onclick = async () => {
+    const button = $("trading-broker-connect");
+    button.disabled = true;
+    try {
+      const result = await request("/broker/connect", {method: "POST"});
+      const destination = new URL(result.url);
+      if (destination.origin !== "https://robinhood.com" || destination.pathname !== "/oauth") throw Error("Unexpected authorization destination.");
+      window.location.assign(destination.href);
+    } catch (error) {
+      note(error.message, true);
+      button.disabled = false;
+    }
+  };
   $("trading-lock").onclick = lock;
   $("trading-refresh").onclick = window.openTrading;
   $("trading-cycles").addEventListener("click", async event => {
