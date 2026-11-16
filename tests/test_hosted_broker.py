@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from ledger.api import create_app
-from ledger.broker import BrokerVault, ReadOnlyBroker
+from ledger.broker import BrokerVault, ReadOnlyBroker, SERVER, CALLBACK, BrokerOAuthError
 from ledger.config import BrokerCallbackLogFilter
 from ledger.postgres_store import PostgresStore
 
@@ -43,7 +43,7 @@ def test_oauth_pkce_state_encryption_and_refresh(monkeypatch):
     def post(url, **kwargs):
         posts.append((url, kwargs))
         if "register" in url:
-            data = {"client_id": "test-client"}
+            data = {"client_id": "test-client", "redirect_uris": [CALLBACK]}
         elif kwargs["data"]["grant_type"] == "refresh_token":
             data = {"access_token": "refreshed-private-token", "expires_in": 3600}
         else:
@@ -56,16 +56,17 @@ def test_oauth_pkce_state_encryption_and_refresh(monkeypatch):
     assert query["code_challenge_method"] == ["S256"]
     assert urlparse(url).netloc == "robinhood.com"
     with pytest.raises(ValueError):
-        vault.finish("code", state, "wrong-browser")
-    vault.finish("code", state, state)
+        vault.finish("code", state, "wrong-browser", SERVER)
+    vault.finish("code", state, state, SERVER)
     assert "private-access-token" not in json.dumps(store.db.payload)
     assert "private-refresh-token" not in json.dumps(store.db.payload)
-    assert vault.status() == {"connected": True, "mode": "read_only"}
+    assert vault.status()["connected"] is True
+    assert vault.status()["oauth"]["stage"] == "connected"
     assert vault.access_token() == "refreshed-private-token"
     # Refresh-token rotation may omit a new refresh token; retain the old one.
     assert vault.mutate(lambda data: data["tokens"]["refresh_token"]) == "private-refresh-token"
     with pytest.raises(ValueError):
-        vault.finish("code", state, state)
+        vault.finish("code", state, state, SERVER)
 
 
 def test_broker_rejects_order_tools_before_contacting_server():
@@ -214,3 +215,164 @@ def test_missing_broker_grant_still_saves_market_observations(tmp_path, monkeypa
     state = next(r for r in records if r["kind"] == "worker_status")["payload"]
     assert state["state"] == "connection_required"
     assert not any(r["kind"] in {"trade_event", "broker_snapshot"} for r in records)
+
+
+def oauth_vault(monkeypatch, *, callback=CALLBACK):
+    monkeypatch.setenv("LEDGER_BROKER_ENCRYPTION_KEY", "test-encryption-secret-" * 3)
+    monkeypatch.setenv("LEDGER_BROKER_CALLBACK_URL", callback)
+    vault = BrokerVault(FakeStore())
+    calls = []
+
+    def post(url, **kwargs):
+        calls.append((url, kwargs))
+        data = ({"client_id": "test-client", "redirect_uris": kwargs["json"]["redirect_uris"], "token_endpoint_auth_method": "none"}
+                if "register" in url else
+                {"access_token": "test-private-access", "refresh_token": "test-private-refresh", "expires_in": 3600})
+        return SimpleNamespace(raise_for_status=lambda: None, json=lambda: data)
+
+    monkeypatch.setattr("ledger.broker.httpx.post", post)
+    return vault, calls
+
+
+def test_pkce_matches_rfc7636_example(monkeypatch):
+    vault, _ = oauth_vault(monkeypatch)
+    verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    monkeypatch.setattr("ledger.broker.secrets.token_urlsafe", lambda length: "test-state" if length == 32 else verifier)
+    url, state = vault.begin()
+    query = parse_qs(urlparse(url).query)
+    assert query["code_challenge"] == ["E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"]
+    assert query["state"] == [state]
+    assert query["resource"] == [SERVER]
+    assert query["redirect_uri"] == [CALLBACK]
+
+
+@pytest.mark.parametrize("issuer", ["", "https://attacker.example"])
+def test_issuer_validation_precedes_token_exchange(monkeypatch, issuer):
+    vault, calls = oauth_vault(monkeypatch)
+    _, state = vault.begin()
+    calls.clear()
+    with pytest.raises(BrokerOAuthError) as error:
+        vault.finish("private-code", state, state, issuer)
+    assert error.value.stage == "issuer_validation"
+    assert calls == []
+    assert vault.status()["oauth"]["stage"] == "issuer_validation"
+    assert vault.status()["connected"] is False
+
+
+def test_configured_callback_is_used_in_registration_and_exchange(monkeypatch):
+    configured = "https://localhost/broker/callback"
+    vault, calls = oauth_vault(monkeypatch, callback=configured)
+    url, state = vault.begin()
+    assert calls[0][1]["json"]["redirect_uris"] == [configured]
+    assert calls[0][1]["json"]["application_type"] == "web"
+    assert parse_qs(urlparse(url).query)["redirect_uri"] == [configured]
+    # The code must be exchanged against the URI that started this flow, even after a config change.
+    monkeypatch.setenv("LEDGER_BROKER_CALLBACK_URL", CALLBACK)
+    vault.finish("code", state, state, SERVER)
+    body = calls[-1][1]["data"]
+    assert body["redirect_uri"] == configured
+    assert body["grant_type"] == "authorization_code"
+    assert body["resource"] == SERVER
+    assert "client_secret" not in body
+
+
+def test_browser_callback_happy_path_cookie_and_private_status(tmp_path, monkeypatch):
+    vault, calls = oauth_vault(monkeypatch, callback="https://localhost/broker/callback")
+    monkeypatch.setenv("LEDGER_API_TOKEN", "workspace")
+    monkeypatch.setenv("LEDGER_TRADING_TOKEN", "owner")
+    monkeypatch.setattr("ledger.broker.BrokerVault", lambda store: vault)
+    with TestClient(create_app(tmp_path), base_url="https://localhost") as client:
+        headers = {"Authorization": "Bearer owner"}
+        begin = client.post("/api/trading/broker/connect", headers=headers)
+        assert begin.status_code == 200
+        cookie = begin.headers["set-cookie"]
+        for part in ["HttpOnly", "Secure", "SameSite=lax", "Path=/broker/callback", "Max-Age=600"]:
+            assert part in cookie
+        assert begin.headers["cache-control"] == "private, no-store"
+        state = parse_qs(urlparse(begin.json()["url"]).query)["state"][0]
+        returned = client.get("/broker/callback", params={"state": state, "code": "test-code", "iss": SERVER}, follow_redirects=False)
+        assert returned.status_code == 303
+        assert returned.headers["location"] == "/#trading"
+        assert returned.headers["referrer-policy"] == "no-referrer"
+        assert "Max-Age=0" in returned.headers["set-cookie"]
+        result = client.get("/api/trading/broker", headers=headers)
+        assert result.json()["connected"] is True
+        assert result.json()["oauth"]["stage"] == "connected"
+        assert "test-private" not in result.text
+        assert client.get("/api/trading/broker").status_code == 401
+
+
+def test_invalid_browser_state_cannot_exchange_or_poison_status(monkeypatch):
+    vault, calls = oauth_vault(monkeypatch)
+    _, state = vault.begin()
+    calls.clear()
+    with pytest.raises(BrokerOAuthError):
+        vault.finish("code", state, "wrong-cookie", SERVER)
+    assert calls == []
+    assert vault.status()["oauth"]["stage"] == "authorization_started"
+    assert vault.status()["connected"] is False
+
+
+def test_token_exchange_failure_has_safe_stage_diagnostic(monkeypatch):
+    vault, _ = oauth_vault(monkeypatch)
+    _, state = vault.begin()
+
+    def fail(*args, **kwargs):
+        import httpx
+        raise httpx.ConnectError("secret provider details that must not be exposed")
+
+    monkeypatch.setattr("ledger.broker.httpx.post", fail)
+    with pytest.raises(BrokerOAuthError) as result:
+        vault.finish("secret-code", state, state, SERVER)
+    assert result.value.stage == "token_exchange"
+    status = vault.status()
+    assert status["oauth"]["stage"] == "token_exchange"
+    assert "secret" not in json.dumps(status)
+
+
+def test_callback_provider_denial_never_exchanges_code(monkeypatch):
+    vault, calls = oauth_vault(monkeypatch)
+    _, state = vault.begin()
+    calls.clear()
+    with pytest.raises(BrokerOAuthError) as result:
+        vault.finish("", state, state, SERVER, "access_denied")
+    assert result.value.stage == "provider_error"
+    assert calls == []
+
+
+@pytest.mark.parametrize("configured", ["http://localhost/broker/callback", "https://other.example/broker/callback", "https://localhost/wrong-path"])
+def test_callback_configuration_rejected_before_registration(tmp_path, monkeypatch, configured):
+    monkeypatch.setenv("LEDGER_API_TOKEN", "workspace")
+    monkeypatch.setenv("LEDGER_TRADING_TOKEN", "owner")
+    monkeypatch.setenv("LEDGER_BROKER_CALLBACK_URL", configured)
+    with TestClient(create_app(tmp_path), base_url="https://localhost") as client:
+        response = client.post("/api/trading/broker/connect", headers={"Authorization": "Bearer owner"})
+        assert response.status_code == 503
+
+
+def test_registration_rejects_a_different_redirect(monkeypatch):
+    vault, _ = oauth_vault(monkeypatch)
+    response = SimpleNamespace(raise_for_status=lambda: None,
+        json=lambda: {"client_id": "client", "redirect_uris": ["https://other.example/callback"]})
+    monkeypatch.setattr("ledger.broker.httpx.post", lambda *a, **kw: response)
+    with pytest.raises(BrokerOAuthError) as result:
+        vault.begin()
+    assert result.value.stage == "registration_redirect"
+    assert vault.status()["connected"] is False
+
+
+def test_changed_callback_refreshes_cached_registration(monkeypatch):
+    vault, calls = oauth_vault(monkeypatch)
+    vault.begin()
+    monkeypatch.setenv("LEDGER_BROKER_CALLBACK_URL", "https://localhost/broker/callback")
+    vault.begin()
+    assert len(calls) == 2
+    assert calls[-1][1]["json"]["redirect_uris"] == ["https://localhost/broker/callback"]
+
+
+def test_status_read_does_not_rewrite_encrypted_credentials(monkeypatch):
+    vault, _ = oauth_vault(monkeypatch)
+    vault.begin()
+    before = json.dumps(vault.store.db.payload)
+    vault.status()
+    assert json.dumps(vault.store.db.payload) == before
