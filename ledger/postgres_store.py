@@ -49,6 +49,20 @@ class PostgresStore:
                        "ON CONFLICT (workspace,kind,id) DO UPDATE SET payload=excluded.payload",
                        ("owner", record["kind"], record["id"], record["created"], Jsonb(record)))
 
+    def claim_research_review(self):
+        from .review_queue import claim_review, release_stale_reviews
+        with self._db() as db:
+            db.execute("SELECT pg_advisory_xact_lock(hashtext('thesis-ledger-trial-budget'))")
+            rows = db.execute("SELECT payload FROM thesis_ledger.records WHERE workspace='owner' AND kind IN ('broker_snapshot','trade_event','trading_cycle','trading_request')").fetchall()
+            records = [row[0] for row in rows]
+            updates = release_stale_reviews(records)
+            record = claim_review(records)
+            if record:
+                updates.append(record)
+            for updated in updates:
+                db.execute("UPDATE thesis_ledger.records SET payload=%s WHERE workspace='owner' AND kind=%s AND id=%s", (Jsonb(updated), updated["kind"], updated["id"]))
+            return record
+
     def cancel_trading_request(self, request_id):
         with self._db() as db:
             db.execute("SELECT pg_advisory_xact_lock(hashtext('thesis-ledger-trial-budget'))")
@@ -56,7 +70,7 @@ class PostgresStore:
             if not row:
                 raise KeyError(request_id)
             record = row[0]
-            if record["payload"].get("status") not in {"queued", "cancelled"}:
+            if record["payload"].get("status") not in {"queued", "research_queued", "cancelled"}:
                 raise ValueError("Only queued reviews can be removed")
             record["payload"].update(status="cancelled", cancelled_at=now())
             db.execute("UPDATE thesis_ledger.records SET payload=%s WHERE workspace='owner' AND kind='trading_request' AND id=%s", (Jsonb(record), request_id))

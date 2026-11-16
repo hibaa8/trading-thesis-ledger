@@ -31,8 +31,13 @@ from .public import COOKIE, charge, visitor_cookie
 from .market import MarketBrief
 from .quotes import Quotes, quote_interval
 from .trading_dashboard import TradingRecord, trading_view
+from .review_queue import ReviewQueue
 from .config import load_config
 from .alpaca import company_news, intraday
+
+
+class ReviewBasket(BaseModel):
+    tickers: list[str] = Field(min_length=2, max_length=5)
 
 
 class ChatRequest(BaseModel):
@@ -51,15 +56,20 @@ def create_app(directory=None):
     chat = Chat(store, harness, quotes, market)
     forecast_lock = asyncio.Lock()
     research_jobs = set()
+    review_queue = ReviewQueue(store, harness)
+    review_submit_lock = asyncio.Lock()
     mcp = create_mcp(store, harness, quotes, market)
     public_mcp = create_mcp(quotes=quotes, market=market, market_only=True)
 
     @asynccontextmanager
     async def lifespan(app):
         async with mcp.session_manager.run(), public_mcp.session_manager.run():
+            queue_job = asyncio.create_task(review_queue.run())
             try:
                 yield
             finally:
+                queue_job.cancel()
+                await asyncio.gather(queue_job, return_exceptions=True)
                 for job in research_jobs:
                     job.cancel()
                 if research_jobs:
@@ -261,6 +271,34 @@ def create_app(directory=None):
     @app.get("/api/trading")
     def private_trading():
         return trading_view(store)
+
+    @app.post("/api/trading/reviews", status_code=202)
+    async def request_immediate_review(basket: ReviewBasket):
+        async with review_submit_lock:
+            import uuid
+            from .store import now
+            from pydantic import ValidationError
+            symbols = list(dict.fromkeys(t.strip().upper() for t in basket.tickers))
+            if not 2 <= len(symbols) <= 5:
+                raise HTTPException(422, "Enter 2 to 5 distinct stock or ETF symbols")
+            try:
+                for ticker in symbols:
+                    ResearchRequest(ticker=ticker)
+            except ValidationError:
+                raise HTTPException(422, "Enter valid stock or ETF symbols") from None
+            records = await asyncio.to_thread(store.trading_records)
+            pending = [r for r in records if r["kind"] == "trading_request" and r["payload"].get("status") in {"research_queued", "researching"}]
+            existing = next((r for r in pending if r["payload"].get("tickers") == symbols), None)
+            if existing:
+                review_queue.wake.set()
+                return existing
+            if len(pending) >= 5:
+                raise HTTPException(429, "Five reviews are already waiting or running. Remove a queued review or wait for completion.")
+            record = dict(id=uuid.uuid4().hex, kind="trading_request", created=now(),
+                          payload=dict(tickers=symbols, status="research_queued", research_only=True))
+            await asyncio.to_thread(store.save_trading_record, record)
+            review_queue.wake.set()
+            return record
 
     @app.delete("/api/trading/requests/{request_id}")
     def cancel_trading_request(request_id: str):

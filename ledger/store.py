@@ -176,6 +176,20 @@ class Store:
                        "ON CONFLICT(kind,id) DO UPDATE SET payload=excluded.payload",
                        (record["kind"], record["id"], record["created"], json.dumps(record)))
 
+    def claim_research_review(self):
+        from .review_queue import claim_review, release_stale_reviews
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            rows = db.execute("SELECT payload FROM trading_records WHERE kind != 'trading_access'").fetchall()
+            records = [json.loads(row[0]) for row in rows]
+            updates = release_stale_reviews(records)
+            record = claim_review(records)
+            if record:
+                updates.append(record)
+            for updated in updates:
+                db.execute("UPDATE trading_records SET payload=? WHERE kind=? AND id=?", (json.dumps(updated), updated["kind"], updated["id"]))
+            return record
+
     def cancel_trading_request(self, request_id):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -183,7 +197,7 @@ class Store:
             if not row:
                 raise KeyError(request_id)
             record = json.loads(row[0])
-            if record["payload"].get("status") not in {"queued", "cancelled"}:
+            if record["payload"].get("status") not in {"queued", "research_queued", "cancelled"}:
                 raise ValueError("Only queued reviews can be removed")
             record["payload"].update(status="cancelled", cancelled_at=now())
             db.execute("UPDATE trading_records SET payload=? WHERE kind='trading_request' AND id=?", (json.dumps(record), request_id))
