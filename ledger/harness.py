@@ -26,11 +26,11 @@ class Harness:
         self.store.save(state)
         return state
 
-    async def run(self, request=None, resume_id=None):
+    async def run(self, request=None, resume_id=None, source_evidence=None):
         async with self.lock:
-            return await self._run(request, resume_id)
+            return await self._run(request, resume_id, source_evidence)
 
-    async def _run(self, request, resume_id):
+    async def _run(self, request, resume_id, source_evidence=None):
         start = time.monotonic()
         if resume_id:
             state = self.store.get(resume_id)
@@ -66,6 +66,7 @@ class Harness:
             async with asyncio.timeout(240):
                 if "snapshot" not in state:
                     state["snapshot"] = await snapshot(req)
+                    state["snapshot"]["evidence"].extend(source_evidence or [])
                     state["snapshot"]["bars"] = validate_bars(
                         state["snapshot"]["bars"], req.as_of
                     )

@@ -126,3 +126,13 @@ def test_candidate_abstentions_do_not_reserve_budget(tmp_path, monkeypatch):
     assert all(item["exclusion_reason"] for item in result["candidates"])
     with store.connect() as db:
         assert db.execute("select count(*) from trade_proposals").fetchone()[0] == 0
+
+
+def test_broker_evidence_is_preserved_in_saved_research(tmp_path):
+    from ledger.harness import Harness
+    from ledger.models import ResearchRequest
+    store=Store(tmp_path)
+    source=dict(id="broker-valuation",kind="fundamentals",title="Broker valuation",text="P/E 20",url="https://robinhood.com/stocks/AAPL/",published=TODAY)
+    run=asyncio.run(Harness(store).run(ResearchRequest(ticker="AAPL",mode="demo"),source_evidence=[source]))
+    assert run["status"]=="complete"
+    assert source in store.get(run["id"])["snapshot"]["evidence"]

@@ -1,5 +1,6 @@
 """Local-only trade planning tools; Robinhood's MCP handles order review and approval."""
 
+import json
 import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -62,9 +63,10 @@ def create_trader_mcp(store=None):
         return await dashboard_state()
 
     @mcp.tool()
-    async def run_private_trading_cycle(tickers: list[str], amount_usd: float = 20) -> dict:
+    async def run_private_trading_cycle(tickers: list[str], amount_usd: float = 20,
+                                        broker_fundamentals: dict | None = None) -> dict:
         """Research candidates and held stocks using the current private Robinhood snapshot. Records all analyst/debate/manager/risk decisions on Thesis Ledger, with a $20 lifetime buy budget and $25 per proposal ceiling. Returns at most one proposal for Robinhood review. Does not request an order."""
-        return await private_cycle(harness, planner, tickers, amount_usd)
+        return await private_cycle(harness, planner, tickers, amount_usd, broker_fundamentals)
 
     @mcp.tool()
     async def record_robinhood_trade_event(proposal_id: str, symbol: str, side: str,
@@ -85,7 +87,7 @@ def create_trader_mcp(store=None):
     return mcp
 
 
-async def compare_candidates(harness, planner, tickers, amount_usd=25, *, positions=None, buy_budget=None, experience=None):
+async def compare_candidates(harness, planner, tickers, amount_usd=25, *, positions=None, buy_budget=None, experience=None, broker_fundamentals=None):
     if os.getenv("LEDGER_TRADING_ENABLED") != "1":
         raise ValueError("Trading proposals are disabled. Set LEDGER_TRADING_ENABLED=1 locally.")
     if _cents(amount_usd) > planner.max_trade_cents:
@@ -100,7 +102,20 @@ async def compare_candidates(harness, planner, tickers, amount_usd=25, *, positi
     eligible = []
     positions = positions or {}
     for request in requests:
-        run = await harness.run(request)
+        source = next((item for item in (broker_fundamentals or {}).get("results", [])
+                       if item.get("symbol") == request.ticker), None)
+        if source and source.get("market_date") == str(day):
+            fields = {key: source.get(key) for key in (
+                "symbol", "market_date", "pe_ratio", "pb_ratio", "market_cap", "shares_outstanding",
+                "dividend_yield", "sector", "industry",
+            )}
+            evidence = dict(id="robinhood-fundamentals", kind="fundamentals", source="Robinhood",
+                title=f"{request.ticker} valuation and company metrics · Robinhood",
+                url=f"https://robinhood.com/stocks/{request.ticker}/", published=str(day),
+                text=json.dumps(fields))
+            run = await harness.run(request, source_evidence=[evidence])
+        else:
+            run = await harness.run(request)
         outcome = {"ticker": request.ticker, "run_id": run["id"], "status": run["status"],
                    "decision": run.get("decision"), "error": run.get("error"),
                    "reports": run.get("reports", {}), "metrics": run.get("metrics", {}),
@@ -148,7 +163,7 @@ async def compare_candidates(harness, planner, tickers, amount_usd=25, *, positi
     return {"candidates": outcomes, "selection": selection, "proposal": proposal}
 
 
-async def private_cycle(harness, planner, tickers, amount_usd=20):
+async def private_cycle(harness, planner, tickers, amount_usd=20, broker_fundamentals=None):
     dashboard = await dashboard_state()
     snapshot = dashboard.get("snapshot")
     if not snapshot:
@@ -182,7 +197,8 @@ async def private_cycle(harness, planner, tickers, amount_usd=20):
                               for item in prior]))
             experience = await analyze("reflection", {"evidence": [observation]}, "live")
         result = await compare_candidates(harness, planner, symbols, amount_usd,
-            positions=positions, buy_budget=float(dashboard["funding"]["remaining"]), experience=experience)
+            positions=positions, buy_budget=float(dashboard["funding"]["remaining"]), experience=experience,
+            broker_fundamentals=broker_fundamentals)
         cycle.payload.update(result, status="complete", experience=experience, completed_at=now())
         # Reserve across checks while the proposal awaits broker review.
         if proposal := result.get("proposal"):
