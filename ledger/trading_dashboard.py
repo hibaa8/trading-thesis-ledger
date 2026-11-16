@@ -60,12 +60,21 @@ def funding_status(snapshot, events):
                     reserved += max(Decimal(0), decimal_value(amount) - cost)
     for event in events:
         item = event["payload"]
-        if item.get("side") == "buy" and item.get("state") in {"review_requested", "awaiting_approval", "submission_unknown"}:
+        if item.get("side") == "buy" and item.get("state") in {"review_requested", "awaiting_approval", "submission_unknown", "approved", "queued", "partially_filled"}:
             if not ({item.get("approval_id"), item.get("order_id")} & reconciled):
                 reserved += decimal_value(item["amount_usd"])
     remaining = max(Decimal(0), limit - spent - reserved)
-    unknown_approvals = bool(snapshot and snapshot.get("approvals") and not events)
-    if not snapshot or not snapshot.get("orders_complete") or unknown_approvals:
+    known_approvals = {event["payload"].get("approval_id") for event in events}
+    unknown_approvals = bool(snapshot and any(
+        (approval.get("approval_id") or approval.get("id")) not in known_approvals
+        or not (approval.get("approval_id") or approval.get("id"))
+        for approval in snapshot.get("approvals", [])
+    ))
+    unknown_cost = bool(snapshot and any(
+        decimal_value(order.get("cumulative_quantity") or 0) > 0 and order.get("average_price") is None
+        for order in snapshot.get("orders", []) if order.get("side") == "buy"
+    ))
+    if not snapshot or not snapshot.get("orders_complete") or unknown_approvals or unknown_cost:
         remaining = Decimal(0)
     if snapshot:
         remaining = min(remaining, max(Decimal(0), decimal_value(snapshot.get("buying_power") or 0)))
@@ -89,7 +98,7 @@ def merge_trading_record(record, records):
         if old.get("state") != item.get("state"):
             history.append(dict(state=old.get("state"), recorded_at=previous["created"], detail=old.get("detail", "")))
         item["history"] = history
-    if item.get("state") in {"review_requested", "awaiting_approval", "submission_unknown"} and item.get("side") == "buy":
+    if item.get("state") in {"review_requested", "awaiting_approval", "submission_unknown", "approved", "queued", "partially_filled"} and item.get("side") == "buy":
         snapshots = [r for r in records if r["kind"] == "broker_snapshot"]
         snapshot = max(snapshots, key=lambda r: r["created"])["payload"] if snapshots else None
         others = [r for r in records if r["kind"] == "trade_event" and r["id"] != record["id"]]

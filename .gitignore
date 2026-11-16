@@ -9,3 +9,5 @@ data/
 vendor/
 
 .venv-arm/
+
+supabase/.temp/

@@ -116,6 +116,7 @@
     $("trading-key").value = "";
     await window.openTrading();
   };
+  if ($("trading").classList.contains("active")) window.openTrading();
   $("trading-lock").onclick = lock;
   $("trading-refresh").onclick = window.openTrading;
   $("trading-request").onsubmit = async event => {

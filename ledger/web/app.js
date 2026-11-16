@@ -533,6 +533,10 @@ api("/config")
       $("signin-status").textContent = "Google sign-in did not finish. Please try again.";
       $("signin-status").hidden = false;
     }
+    if (location.hash === "#trading") {
+      await page("trading");
+      return;
+    }
     if (location.hash === "#memory") {
       history.replaceState(null, "", location.pathname);
       await page("memory");
