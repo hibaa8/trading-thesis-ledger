@@ -272,6 +272,36 @@ def create_app(directory=None):
     def private_trading():
         return trading_view(store)
 
+    @app.get("/api/trading/broker")
+    async def broker_connection_status():
+        from .broker import BrokerVault
+        try:
+            return await asyncio.to_thread(BrokerVault(store).status)
+        except ValueError:
+            return {"connected": False, "configured": False, "mode": "read_only"}
+
+    @app.post("/api/trading/broker/connect")
+    async def broker_connect():
+        from .broker import BrokerVault
+        try:
+            url, state = await asyncio.to_thread(BrokerVault(store).begin)
+        except Exception:
+            raise HTTPException(503, "Hosted Robinhood connection is not ready. Check the encryption secret and database configuration.") from None
+        response = JSONResponse({"url": url})
+        response.set_cookie("ledger-broker-state", state, httponly=True, secure=True, samesite="lax", max_age=600, path="/broker/callback")
+        return response
+
+    @app.get("/broker/callback")
+    async def broker_callback(request: Request, code: str = "", state: str = ""):
+        from .broker import BrokerVault
+        try:
+            await asyncio.to_thread(BrokerVault(store).finish, code, state, request.cookies.get("ledger-broker-state", ""))
+        except Exception:
+            return JSONResponse({"detail": "Robinhood authorization failed or expired. Return to Trading and connect again."}, status_code=400, headers={"Cache-Control": "no-store"})
+        response = RedirectResponse("/#trading", status_code=303, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"})
+        response.delete_cookie("ledger-broker-state", path="/broker/callback")
+        return response
+
     @app.post("/api/trading/reviews", status_code=202)
     async def request_immediate_review(basket: ReviewBasket):
         async with review_submit_lock:
