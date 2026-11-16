@@ -82,7 +82,7 @@
     })) : '<p class="trading-empty">No stock or ETF orders recorded by Robinhood.</p>';
     $("trading-events").innerHTML = events.length ? '<h3>Proposal activity</h3>' + events.map(e=>`<div class="trading-event"><strong>${esc(e.symbol)} · ${esc(label(e.side))} ${esc(money(e.amount_usd))}</strong><span>${esc(label(e.state))}</span><p>${esc(e.detail || "")}</p>${e.history?.length ? `<details><summary>Earlier states</summary>${e.history.map(h=>`<p>${esc(label(h.state))} · ${esc(time(h.recorded_at))}</p>`).join("")}</details>` : ""}</div>`).join("") : "";
     const queue = (data.requests || []).filter(r=>r.payload.status === "queued");
-    $("trading-cycles").innerHTML = queue.map(r=>`<p class="info">Review queued · ${esc(r.payload.tickers.join(", "))} · ${esc(time(r.created))}</p>`).join("") + (data.cycles.length ? data.cycles.map(renderCycle).join("") : '<p class="trading-empty">The first review will appear here with the analysts, debate, manager decision and sources.</p>');
+    $("trading-cycles").innerHTML = queue.map(r=>`<div class="info trading-queued"><span>Review queued · ${esc(r.payload.tickers.join(", "))} · ${esc(time(r.created))}</span><button type="button" class="trading-remove" data-remove-request="${esc(r.id)}" aria-label="Remove queued review for ${esc(r.payload.tickers.join(", "))}" title="Remove queued review">×</button></div>`).join("") + (data.cycles.length ? data.cycles.map(renderCycle).join("") : '<p class="trading-empty">The first review will appear here with the analysts, debate, manager decision and sources.</p>');
     $("trading-disclosures").innerHTML = (broker.market_data_disclosures || []).map(d=>`<p>${esc(d)}</p>`).join("");
     note(broker.orders_complete && broker.positions_complete ? "" : "Broker sync is incomplete. Review pagination before any proposal.");
   }
@@ -119,6 +119,19 @@
   if ($("trading").classList.contains("active")) window.openTrading();
   $("trading-lock").onclick = lock;
   $("trading-refresh").onclick = window.openTrading;
+  $("trading-cycles").addEventListener("click", async event => {
+    const button = event.target.closest("[data-remove-request]");
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    try {
+      await request("/requests/" + encodeURIComponent(button.dataset.removeRequest), {method: "DELETE"});
+      await window.openTrading();
+      note("Queued review removed.");
+    } catch (error) {
+      button.disabled = false;
+      note(error.message, true);
+    }
+  });
   $("trading-request").onsubmit = async event => {
     event.preventDefault();
     const tickers = [...new Set($("trading-symbols").value.toUpperCase().split(/[\s,]+/).filter(Boolean))];
