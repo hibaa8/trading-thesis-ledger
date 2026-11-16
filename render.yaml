@@ -17,3 +17,7 @@ services:
         sync: false
       - key: APCA_API_SECRET_KEY
         sync: false
+      - key: LEDGER_BROKER_ENCRYPTION_KEY
+        generateValue: true
+      - key: LEDGER_BROKER_ACCOUNT_LAST4
+        value: "2100"

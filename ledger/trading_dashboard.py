@@ -35,7 +35,9 @@ def trading_view(store):
     events = [r for r in records if r["kind"] == "trade_event"]
     funding = funding_status(snapshots[0]["payload"] if snapshots else None, events)
     requests = [r for r in records if r["kind"] == "trading_request"]
-    return dict(funding=funding, requests=requests[:20], snapshot=snapshots[0] if snapshots else None,
+    worker = next((r for r in records if r["kind"] == "worker_status"), None)
+    observation = next((r for r in records if r["kind"] == "market_observation"), None)
+    return dict(worker=worker, market_observation=observation, funding=funding, requests=requests[:20], snapshot=snapshots[0] if snapshots else None,
                 snapshots=snapshots[:100], cycles=cycles[:30], events=events[:100],
                 funding_limit_usd="20.00", max_trade_usd="25.00", max_daily_usd="100.00")
 

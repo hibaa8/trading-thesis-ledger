@@ -81,6 +81,10 @@ class CloudMonitor:
         for offset in range(0, len(symbols), 20):
             page = await self.broker.call("get_equity_quotes", symbols=symbols[offset:offset + 20])
             quotes["results"].extend(page.get("results") or [])
+        # P&L echoes the numeric RHS account ID; the other tools use the brokerage ID.
+        if realized.get("account_number") != self.account["rhs_account_number"]:
+            raise ValueError("Robinhood P&L did not match the selected account")
+        realized = {**realized, "account_number": account}
         record = broker_snapshot(portfolio, positions, quotes, orders, approvals, setting, realized)
         self.store.save_trading_record(record.model_dump(mode="json"))
         return record.payload

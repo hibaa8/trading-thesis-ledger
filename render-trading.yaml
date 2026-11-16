@@ -1,7 +1,7 @@
-# Deploy this separate Blueprint only after approving its hosting cost and broker access.
+# Approved hourly read-only account observations. No trade selection or order submission.
 services:
   - type: cron
-    name: thesis-ledger-market-monitor
+    name: thesis-ledger-account-monitor
     runtime: docker
     repo: https://github.com/hibaa8/trading-thesis-ledger
     branch: codex/initial-build
@@ -11,10 +11,13 @@ services:
     envVars:
       - key: LEDGER_WORKER_ENABLED
         value: "1"
-      - key: LEDGER_TRADING_ENABLED
-        value: "1"
       - key: LEDGER_BROKER_ACCOUNT_LAST4
-        sync: false
+        value: "2100"
+      - key: LEDGER_BROKER_ENCRYPTION_KEY
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: LEDGER_BROKER_ENCRYPTION_KEY
       - key: LEDGER_BROKER_CALLBACK_URL
         value: https://thesis-ledger.onrender.com/broker/callback
       - key: LEDGER_API_TOKEN

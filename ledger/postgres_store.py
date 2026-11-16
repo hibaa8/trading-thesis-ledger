@@ -85,7 +85,7 @@ class PostgresStore:
         with self._db() as db:
             rows = db.execute(
                 "SELECT payload FROM thesis_ledger.records WHERE workspace='owner' "
-                "AND kind IN ('broker_snapshot','trading_cycle','trade_event','trading_request') "
+                "AND kind IN ('broker_snapshot','trading_cycle','trade_event','trading_request','worker_status','market_observation') "
                 "ORDER BY created DESC LIMIT 300"
             ).fetchall()
         return [row[0] for row in rows]
