@@ -26,3 +26,18 @@ Thesis Ledger can produce a small stock or ETF trade proposal from a fresh, comp
 5. Only then call `place_equity_order` to create Robinhood's pending approval request. The account holder reviews and manually places it in the Robinhood app. Do not treat a pending approval as a fill. Reconcile through Robinhood order history.
 
 The [TradingAgents paper](https://arxiv.org/abs/2412.20138) inspired the analyst/debate/manager/risk sequence. Thesis Ledger adds a separate human approval boundary. Research and forecast outputs are not validated trading signals; paper performance does not establish expected returns for this implementation.
+
+
+## Private Trading dashboard
+
+The Trading tab displays broker snapshots, cash without borrowing, account value, realized and open-position profit/loss, the $20 trial budget, proposals, approvals, orders and each review's analyst/debate/manager/risk reports. Trading records live in the private `owner` workspace in Supabase. The shared research API and public MCP cannot read them. The dashboard uses a separate private key, `LEDGER_TRADING_TOKEN`, held in browser session storage only while unlocked. Its hash can be stored as the owner `trading_access` record, so Render needs no plaintext trading key.
+
+Robinhood is connected through the official MCP in the local Codex agent. A recurring local Codex check reads the broker tools and uses `sync_robinhood_dashboard` to publish normalized account observations. The web page refreshes saved observations and shows the actual last sync time. The Codex app and this computer must remain available for local scheduled checks. Refreshing the web page does not itself contact Robinhood.
+
+`run_private_trading_cycle` requires a complete broker snapshot less than 15 minutes old. It researches 2–5 symbols including held stocks, compares eligible buy and sell theses, and saves the full reasoning to the private dashboard. Prior outcomes are reviewed by a reflection agent and supplied to subsequent selection decisions. Reflections remain dated hypotheses for review. This is experience retrieval, with no claim of improved future returns.
+
+The initial campaign permits at most $20 of gross purchases. Pending approvals and outstanding buy orders reserve that budget. Filled sales do not reset the purchase limit. The existing $25 per-proposal and $100 daily planning limits also apply. Buy reservations are serialized in the hosted database to prevent duplicate proposals from overspending the trial. The broker connection checks current cash, holdings, tradability, Trade approvals, and order-review alerts again before requesting the user's approval. Dollar-based market orders are restricted to regular market hours.
+
+Broker snapshots count all equity orders since the trial began, including orders initiated by other agents or the account holder. A trade is labeled Thesis Ledger only when its broker order or approval ID matches the recorded proposal event. Account P&L is shown separately from this attribution. Deposits and withdrawals are never treated as trading profits. A pending approval is displayed separately from an actual fill.
+
+See [the recurring check runbook](trading-agent-runbook.md) for the broker reconciliation and decision sequence.

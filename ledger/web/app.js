@@ -108,11 +108,14 @@ async function page(name) {
     research: "Research desk",
     deep: "Deep Research",
     memory: "Thesis ledger",
+    trading: "Trading",
     runs: "Research history",
     connect: "Connect via MCP",
     method: "How it works",
   }[name];
   try {
+    if (name !== "trading" && window.stopTradingRefresh) window.stopTradingRefresh();
+    if (name === "trading" && window.openTrading) await window.openTrading();
     clearTimeout(quoteTimer);
     clearTimeout(marketTimer);
     if (name === "chat") await openChat();

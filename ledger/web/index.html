@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/style.css" />
     <script src="/static/markdown-it-15.0.3.min.js" defer></script>
     <script src="/static/app.js" defer></script>
+    <script src="/static/trading.js" defer></script>
   </head>
   <body>
     <aside>
@@ -33,6 +34,8 @@
           ◈ <span>Research desk</span></button
         ><button data-page="deep">
           ◇ <span>Deep Research</span></button
+        ><button data-page="trading">
+          <svg class="nav-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13h12M4 10V6M8 10V3M12 10V5"/></svg><span>Trading</span></button
         ><button data-page="memory">
           ▤ <span>Thesis ledger</span></button
         ><button data-page="runs">
@@ -265,6 +268,47 @@
             </div>
             <button id="export" class="secondary" type="button">Download report (.md)</button>
           </section>
+        </div>
+      </main>
+      <main id="trading" class="page">
+        <div class="trading-heading"><div><div class="eyebrow">ROBINHOOD · $20 TRIAL</div>
+          <h1>Trading</h1><p class="subtitle">Follow the account, review the reasoning, and approve trades in Robinhood.</p></div>
+          <button id="trading-refresh" class="secondary" type="button" hidden>Refresh dashboard</button></div>
+        <form id="trading-unlock" class="panel trading-unlock">
+          <h2>Open your private trading view</h2>
+          <label for="trading-key">Trading access key</label>
+          <div class="trading-key-row"><input id="trading-key" type="password" autocomplete="off" required />
+            <button type="submit">Open trading view</button></div>
+          <p>Use the private key from your local project’s environment settings.</p>
+        </form>
+        <p id="trading-status" role="status"></p>
+        <div id="trading-content" hidden>
+          <div class="trading-meta"><span id="trading-asof"></span><span id="trading-approvals"></span>
+            <button id="trading-lock" class="secondary" type="button">Lock view</button></div>
+          <section id="trading-stats" class="trading-stats" aria-label="Account overview"></section>
+          <div class="trading-overview">
+            <section class="panel trading-capital"><h2>Trial funding</h2><p id="trading-funding"></p>
+              <progress id="trading-progress" max="20" value="0" aria-label="Trial capital invested or reserved"></progress>
+              <dl id="trading-budget"></dl><p id="trading-budget-note"></p></section>
+            <section class="panel trading-equity"><h2>Account value</h2><div id="trading-equity-chart"></div>
+              <p id="trading-equity-note"></p></section>
+          </div>
+          <section class="trading-section"><div class="trading-section-head"><h2>Positions &amp; orders</h2>
+            <a href="https://robinhood.com/" target="_blank" rel="noopener noreferrer">Open Robinhood ↗</a></div>
+            <div id="trading-positions"></div><div id="trading-orders"></div><div id="trading-events"></div></section>
+          <section class="trading-section"><div class="trading-section-head"><h2>Agent decisions</h2></div>
+            <form id="trading-request" class="panel trading-request">
+              <label for="trading-symbols">Stocks and ETFs to review</label>
+              <input id="trading-symbols" value="SPY, AMZN, GOOGL" aria-describedby="trading-request-note" />
+              <button type="submit">Request agent review</button>
+              <p id="trading-request-note">Queued reviews run at the next scheduled agent check. Held stocks are included in sell reviews.</p>
+            </form>
+            <div id="trading-cycles"></div>
+          </section>
+          <details class="trading-sources"><summary>Broker data and performance</summary>
+            <p>Balances, orders, and realized profit/loss come from Robinhood. Open-position profit/loss uses the latest available broker quotes and average cost. Net profit/loss combines realized and open-position results. Deposits are excluded. Agent attribution requires a recorded approval or order ID.</p>
+            <p>Account data refreshes when the connected agent syncs Robinhood. The last sync time appears above.</p>
+            <div id="trading-disclosures"></div></details>
         </div>
       </main>
       <main id="memory" class="page">
