@@ -1,0 +1,54 @@
+# Deploy this separate Blueprint only after approving its hosting cost and broker access.
+services:
+  - type: cron
+    name: thesis-ledger-market-monitor
+    runtime: docker
+    repo: https://github.com/hibaa8/trading-thesis-ledger
+    branch: codex/initial-build
+    plan: starter
+    dockerCommand: python -m ledger.worker
+    schedule: "45 13-21 * * 1-5"
+    envVars:
+      - key: LEDGER_WORKER_ENABLED
+        value: "1"
+      - key: LEDGER_TRADING_ENABLED
+        value: "1"
+      - key: LEDGER_BROKER_ACCOUNT_LAST4
+        sync: false
+      - key: LEDGER_BROKER_CALLBACK_URL
+        value: https://thesis-ledger.onrender.com/broker/callback
+      - key: LEDGER_API_TOKEN
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: LEDGER_API_TOKEN
+      - key: LEDGER_DATABASE_URL
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: LEDGER_DATABASE_URL
+      - key: LLM_API_KEY
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: LLM_API_KEY
+      - key: ALPHAVANTAGE_API_KEY
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: ALPHAVANTAGE_API_KEY
+      - key: APCA_API_KEY_ID
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: APCA_API_KEY_ID
+      - key: APCA_API_SECRET_KEY
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: APCA_API_SECRET_KEY
+      - key: XAI_API_KEY
+        fromService:
+          type: web
+          name: thesis-ledger
+          envVarKey: XAI_API_KEY
