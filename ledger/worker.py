@@ -5,7 +5,7 @@ import sys
 import uuid
 from datetime import datetime, timezone
 
-from .broker import connected_broker
+from .broker import BrokerAuthorizationRequired, connected_broker
 from .config import load_config
 from .harness import Harness
 from .market import MarketBrief
@@ -23,11 +23,15 @@ def status(store, state, detail):
 
 async def scheduled_check(store, connect=connected_broker):
     status(store, "running", "Syncing account observations and current market data. Order submission is disabled.")
-    async with connect(store) as broker:
-        # Only observational methods are invoked; ReadOnlyBroker rejects every write tool.
-        observer = CloudMonitor(broker, store)
-        snapshot = await observer.sync()
-        await observer.reconcile(snapshot)
+    broker_connected = True
+    try:
+        async with connect(store) as broker:
+            # Only observational methods are invoked; ReadOnlyBroker rejects every write tool.
+            observer = CloudMonitor(broker, store)
+            snapshot = await observer.sync()
+            await observer.reconcile(snapshot)
+    except BrokerAuthorizationRequired:
+        broker_connected = False
     brief = await MarketBrief(Quotes()).get()
     store.save_trading_record(dict(id=uuid.uuid4().hex, kind="market_observation", created=now(), payload=brief))
     # Claim only explicitly requested research baskets, never pick or size trades.
@@ -35,7 +39,10 @@ async def scheduled_check(store, connect=connected_broker):
     claim = await asyncio.to_thread(store.claim_research_review)
     if claim:
         await queue.review(claim)
-    status(store, "complete", "Account and market observations saved. No trades were selected or submitted.")
+    if broker_connected:
+        status(store, "complete", "Account and market observations saved. No trades were selected or submitted.")
+    else:
+        status(store, "connection_required", "Market observations saved. Robinhood is not connected; brokerage balances and order status have not refreshed.")
 
 
 async def main():

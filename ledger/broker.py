@@ -28,6 +28,10 @@ READ_TOOLS = frozenset({"get_accounts", "get_portfolio", "get_equity_positions",
     "get_equity_quotes", "get_trade_approvals", "get_trade_approval_setting", "get_realized_pnl"})
 
 
+class BrokerAuthorizationRequired(ValueError):
+    """No usable grant exists; research observations can still run."""
+
+
 class BrokerVault:
     def __init__(self, store):
         if not isinstance(store, PostgresStore):
@@ -97,10 +101,10 @@ class BrokerVault:
         def refresh(data):
             tokens = data.get("tokens") or {}
             if not tokens.get("access_token"):
-                raise ValueError("Connect Robinhood in the private Trading page first")
+                raise BrokerAuthorizationRequired("Connect Robinhood in the private Trading page first")
             if data.get("expires_at", 0) <= time.time() + 90:
                 if not tokens.get("refresh_token"):
-                    raise ValueError("Robinhood connection expired. Connect again.")
+                    raise BrokerAuthorizationRequired("Robinhood connection expired. Connect again.")
                 r = httpx.post(TOKEN, data=dict(grant_type="refresh_token", refresh_token=tokens["refresh_token"],
                     client_id=data["client"]["client_id"], resource=SERVER), timeout=20)
                 r.raise_for_status()

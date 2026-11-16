@@ -15,3 +15,7 @@ Deploy `render-trading.yaml` as a separate Blueprint in the same workspace as th
 Run a manual cron check after connecting, verify a fresh broker snapshot and completed worker status in Trading, then verify a scheduled invocation. Do not disable the previous local monitor until the hosted read-only connection is verified. An authentication failure records an attention status and exits without orders. The monitor can be suspended in Render without changing stored reports.
 
 This deployment does not enable unattended investment decisions, trade proposals or order submission. A successful account sync does not prove that the separate local trade-planning workflow is running.
+
+## Current provider restriction
+
+The custom Render authorization reached Robinhood consent but returned to Robinhood's own `/oauth/error` page before any callback or token exchange. Registration echoed the requested redirect URI, which does not establish that consent will accept it. [Robinhood's onboarding documentation](https://robinhood.com/us/en/support/articles/onboarding-an-external-agent/) lists supported platforms and localhost clients and directs other platforms to support. Request approval for `https://thesis-ledger.onrender.com/broker/callback`; do not imitate another client's identity or bypass redirect validation. Until a grant succeeds, the cron saves market observations and requested research and reports `connection_required`. It does not refresh brokerage data.

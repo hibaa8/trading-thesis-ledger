@@ -186,3 +186,31 @@ def test_scheduled_check_only_syncs_observations(tmp_path, monkeypatch):
     assert not any(r["kind"] == "trade_event" for r in records)
     assert next(r for r in records if r["kind"] == "worker_status")["payload"]["state"] == "complete"
     assert any(r["kind"] == "market_observation" for r in records)
+
+
+def test_missing_broker_grant_still_saves_market_observations(tmp_path, monkeypatch):
+    from contextlib import asynccontextmanager
+    from ledger import worker
+    from ledger.broker import BrokerAuthorizationRequired
+    from ledger.store import Store
+
+    class Brief:
+        def __init__(self, quotes):
+            pass
+
+        async def get(self):
+            return {"quotes": [], "headlines": []}
+
+    @asynccontextmanager
+    async def disconnected(store):
+        raise BrokerAuthorizationRequired("No grant")
+        yield
+
+    monkeypatch.setattr(worker, "MarketBrief", Brief)
+    store = Store(tmp_path)
+    asyncio.run(worker.scheduled_check(store, disconnected))
+    records = store.trading_records()
+    assert any(r["kind"] == "market_observation" for r in records)
+    state = next(r for r in records if r["kind"] == "worker_status")["payload"]
+    assert state["state"] == "connection_required"
+    assert not any(r["kind"] in {"trade_event", "broker_snapshot"} for r in records)
