@@ -19,7 +19,7 @@ Thesis Ledger can produce a small stock or ETF trade proposal from a fresh, comp
 
 ## Review sequence
 
-1. Ask Thesis Ledger's `research_and_prepare_trade` tool to analyze one ticker. The response contains the run ID, decision, risk review, side, amount, and evidence IDs. Read the full research report before proceeding.
+1. Ask `compare_stocks_and_prepare_trade` to research 2–5 stock or ETF tickers. Each candidate goes through the technical, fundamentals, news and sentiment analysts, bull/bear debate, research manager and risk review. A selection manager compares eligible bullish reports and picks at most one proposal, with a reason and citations to the saved research. If none qualifies, the tool returns the candidate outcomes and no proposal. Only the selected proposal reserves the daily budget. For one ticker, use `research_and_prepare_trade`. The response contains the run ID, decision, risk review, side, amount, and evidence IDs. Read the full research report before proceeding.
 2. Ask Robinhood `get_trade_approval_setting`. **Stop if it is off or cannot be read.**
 3. Check Robinhood tradability, current quote, buying power, and existing position for a sell. Confirm the asset is a stock or ETF.
 4. Ask Robinhood `review_equity_order` with the exact proposed side and amount. Stop on any blocking warning or if the quote/order differs materially from the reviewed proposal.

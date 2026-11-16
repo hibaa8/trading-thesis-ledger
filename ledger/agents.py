@@ -4,6 +4,14 @@ import httpx
 from .models import AgentReport
 
 ROLES = {
+    "selection_manager": (
+        "Compare the supplied eligible stock research reports and choose at most one strongest "
+        "bullish candidate for human review. Assess evidence quality, catalysts, valuation gaps, "
+        "disagreement and downside. Cite exactly one candidate run ID when selecting, with a bullish "
+        "stance. Explain why it is preferable to the other candidates. Use neutral or abstain and "
+        "empty evidence_ids when no candidate merits a proposal. Never treat forecast returns as "
+        "calibrated or compare candidates solely by the highest forecast return."
+    ),
     "technical": (
         "Describe the chart setup from trend, momentum, and volatility. Explain which signals "
         "agree or conflict and give a measurable price or indicator condition that would change "

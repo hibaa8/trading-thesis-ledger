@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -84,3 +85,44 @@ def test_bearish_research_only_proposes_a_sell(tmp_path, monkeypatch):
     proposal = TradePlanner(store).prepare(run["id"], 10, current_time=CLOCK)
     assert proposal["side"] == "sell"
     assert any("position" in step for step in proposal["broker_steps"])
+
+
+def test_candidate_manager_reserves_only_its_selection(tmp_path, monkeypatch):
+    from ledger import trader_mcp
+    monkeypatch.setenv("LEDGER_TRADING_ENABLED", "1")
+    store = Store(tmp_path)
+    planner = TradePlanner(store)
+    calls = []
+    class Research:
+        async def run(self, request):
+            run = live_run(f"{len(calls):032x}", as_of=request.as_of.isoformat())
+            run["request"]["ticker"] = request.ticker
+            calls.append(request.ticker)
+            store.save(run)
+            return run
+    async def manager(role, context, mode):
+        assert role == "selection_manager"
+        assert len(context["evidence"]) == 2
+        return {"stance": "bullish", "evidence_ids": [context["evidence"][1]["id"]],
+                "summary": "Second candidate has stronger sourced fundamentals"}
+    monkeypatch.setattr(trader_mcp, "analyze", manager)
+    result = asyncio.run(trader_mcp.compare_candidates(Research(), planner, ["AAPL", "MSFT"]))
+    assert result["proposal"]["ticker"] == "MSFT"
+    with store.connect() as db:
+        assert db.execute("select count(*) from trade_proposals").fetchone()[0] == 1
+
+
+def test_candidate_abstentions_do_not_reserve_budget(tmp_path, monkeypatch):
+    from ledger import trader_mcp
+    monkeypatch.setenv("LEDGER_TRADING_ENABLED", "1")
+    store = Store(tmp_path)
+    class Research:
+        async def run(self, request):
+            run = live_run("e" * 32, stance="neutral", as_of=request.as_of.isoformat())
+            run["request"]["ticker"] = request.ticker
+            return run
+    result = asyncio.run(trader_mcp.compare_candidates(Research(), TradePlanner(store), ["AAPL", "MSFT"]))
+    assert result["proposal"] is None
+    assert all(item["exclusion_reason"] for item in result["candidates"])
+    with store.connect() as db:
+        assert db.execute("select count(*) from trade_proposals").fetchone()[0] == 0
