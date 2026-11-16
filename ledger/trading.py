@@ -38,26 +38,11 @@ class TradePlanner:
         if amount_cents > self.max_trade_cents:
             raise ValueError("Amount exceeds the per-trade proposal limit")
         run = self.store.get(run_id)
+        self.validate_run(run, current_time=current_time)
         request = run.get("request", {})
         decision = run.get("decision", {})
-        current_time = current_time or datetime.now(EASTERN)
-        day = current_time.astimezone(EASTERN).date().isoformat()
-        if run.get("status") != "complete" or request.get("mode") != "live":
-            raise ValueError("Only completed live research can produce a trade proposal")
-        if request.get("as_of") != day:
-            raise ValueError("Research must be rerun today before proposing a trade")
-        if any("STALE" in str(w).upper() for w in run.get("snapshot", {}).get("warnings", [])):
-            raise ValueError("Research contains a stale-data warning")
-        if run.get("disagreement"):
-            raise ValueError("Research and forecast disagree; no trade proposal generated")
-        if run.get("reports", {}).get("risk", {}).get("stance") == "abstain":
-            raise ValueError("Risk review abstained; no trade proposal generated")
-        stance = decision.get("stance")
-        if stance not in ("bullish", "bearish") or not decision.get("evidence_ids"):
-            raise ValueError("Research has no evidence-backed directional decision")
-        risk_stance = run["reports"]["risk"].get("stance")
-        if risk_stance in ("bullish", "bearish") and risk_stance != stance:
-            raise ValueError("Risk review conflicts with the directional decision")
+        day = (current_time or datetime.now(EASTERN)).astimezone(EASTERN).date().isoformat()
+        stance = decision["stance"]
         side = "buy" if stance == "bullish" else "sell"
         proposal = {
             "id": uuid.uuid4().hex,
@@ -83,3 +68,27 @@ class TradePlanner:
             ],
         }
         return self.store.reserve_trade_proposal(proposal, self.max_daily_cents)
+
+    def validate_run(self, run, *, current_time=None):
+        """Check eligibility without reserving any proposal budget."""
+        request = run.get("request", {})
+        decision = run.get("decision", {})
+        current_time = current_time or datetime.now(EASTERN)
+        day = current_time.astimezone(EASTERN).date().isoformat()
+        if run.get("status") != "complete" or request.get("mode") != "live":
+            raise ValueError("Only completed live research can produce a trade proposal")
+        if request.get("as_of") != day:
+            raise ValueError("Research must be rerun today before proposing a trade")
+        if any("STALE" in str(w).upper() for w in run.get("snapshot", {}).get("warnings", [])):
+            raise ValueError("Research contains a stale-data warning")
+        if run.get("disagreement"):
+            raise ValueError("Research and forecast disagree; no trade proposal generated")
+        if run.get("reports", {}).get("risk", {}).get("stance") == "abstain":
+            raise ValueError("Risk review abstained; no trade proposal generated")
+        stance = decision.get("stance")
+        if stance not in ("bullish", "bearish") or not decision.get("evidence_ids"):
+            raise ValueError("Research has no evidence-backed directional decision")
+        risk_stance = run["reports"]["risk"].get("stance")
+        if risk_stance in ("bullish", "bearish") and risk_stance != stance:
+            raise ValueError("Risk review conflicts with the directional decision")
+        return run
