@@ -4,6 +4,13 @@ import httpx
 from .models import AgentReport
 
 ROLES = {
+    "candidate_scout": (
+        "Select 2 to 3 liquid US stocks or ETFs from the supplied market observations for deeper research. "
+        "Use current moves and dated catalysts, consider the broad market, and avoid choosing solely "
+        "because of an extreme percentage move. Return the selected symbol source IDs in evidence_ids "
+        "with a neutral stance. Explain the research priority without recommending a trade. "
+        "Choose only supplied symbols, or abstain if no observation is useful."
+    ),
     "selection_manager": (
         "Compare the supplied eligible stock research reports and choose at most one strongest "
         "buy or sale-of-held-stock candidate for human review. Assess evidence quality, catalysts, valuation gaps, "

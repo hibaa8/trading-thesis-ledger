@@ -214,11 +214,16 @@ async def dashboard_request(method, path, payload=None):
             return response.json()
 
 
-async def publish_record(record):
+async def publish_record(record, store=None):
+    if store is not None:
+        await asyncio.to_thread(store.save_trading_record, record.model_dump(mode="json"))
+        return dict(id=record.id, kind=record.kind, synced=True)
     # A retry sends the same record ID, preserving idempotency across service restarts.
     await dashboard_request("POST", "/api/trading/records", record.model_dump(mode="json"))
     return dict(id=record.id, kind=record.kind, synced=True)
 
 
-async def dashboard_state():
+async def dashboard_state(store=None):
+    if store is not None:
+        return await asyncio.to_thread(trading_view, store)
     return await dashboard_request("GET", "/api/trading")

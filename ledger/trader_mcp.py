@@ -165,8 +165,8 @@ async def compare_candidates(harness, planner, tickers, amount_usd=25, *, positi
     return {"candidates": outcomes, "selection": selection, "proposal": proposal}
 
 
-async def private_cycle(harness, planner, tickers, amount_usd=20, broker_fundamentals=None):
-    dashboard = await dashboard_state()
+async def private_cycle(harness, planner, tickers, amount_usd=20, broker_fundamentals=None, record_store=None):
+    dashboard = await dashboard_state(record_store)
     snapshot = dashboard.get("snapshot")
     if not snapshot:
         raise ValueError("Sync Robinhood before starting a trading cycle")
@@ -182,7 +182,7 @@ async def private_cycle(harness, planner, tickers, amount_usd=20, broker_fundame
         raise ValueError("Choose 2 to 5 symbols including all held stocks")
     cycle = TradingRecord(id=uuid.uuid4().hex, kind="trading_cycle", created=now(),
         payload=dict(status="researching", tickers=symbols, broker_snapshot_id=snapshot["id"]))
-    await publish_record(cycle)
+    await publish_record(cycle, record_store)
     try:
         experience = None
         prior = dashboard.get("cycles", [])[:5]
@@ -207,16 +207,16 @@ async def private_cycle(harness, planner, tickers, amount_usd=20, broker_fundame
             event = TradingRecord(id=proposal["id"], kind="trade_event", created=now(), payload=dict(
                 proposal_id=proposal["id"], symbol=proposal["ticker"], side=proposal["side"],
                 amount_usd=proposal["amount_usd"], state="review_requested", detail="Awaiting Robinhood broker review"))
-            await publish_record(event)
-        await publish_record(cycle)
+            await publish_record(event, record_store)
+        await publish_record(cycle, record_store)
         for queued in dashboard.get("requests", []):
             if queued["payload"].get("status") == "queued" and set(queued["payload"]["tickers"]) <= set(symbols):
                 queued["payload"].update(status="complete", cycle_id=cycle.id)
-                await publish_record(TradingRecord.model_validate(queued))
+                await publish_record(TradingRecord.model_validate(queued), record_store)
         return dict(cycle_id=cycle.id, **result)
     except BaseException:
         cycle.payload.update(status="interrupted", error="Review interrupted. Inspect saved research and reconcile before retrying.")
-        await publish_record(cycle)
+        await publish_record(cycle, record_store)
         raise
 
 
