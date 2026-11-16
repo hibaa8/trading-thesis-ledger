@@ -41,3 +41,12 @@ The initial campaign permits at most $20 of gross purchases. Pending approvals a
 Broker snapshots count all equity orders since the trial began, including orders initiated by other agents or the account holder. A trade is labeled Thesis Ledger only when its broker order or approval ID matches the recorded proposal event. Account P&L is shown separately from this attribution. Deposits and withdrawals are never treated as trading profits. A pending approval is displayed separately from an actual fill.
 
 See [the recurring check runbook](trading-agent-runbook.md) for the broker reconciliation and decision sequence.
+
+
+### On-demand research reviews
+
+The Trading page's **Request agent review** button sends a private `POST /api/trading/reviews` request for 2–5 symbols. A research worker in the existing web service wakes immediately instead of waiting for the hourly monitor. It checks waiting work every five seconds and runs one basket at a time. The four analysts, bull/bear debate, manager and risk reviewer run for each symbol; saved findings appear progressively under Agent decisions. This path imports neither the trade planner nor the broker and creates no trade proposals or orders.
+
+Requests wait while another review, pending brokerage approval or open order is recorded. The × control removes a waiting request; a running review cannot be removed. Repeated submissions of the same pending basket reuse the request. Requests and results use the private Supabase owner workspace, separate from public research. Failed or interrupted reviews retain saved findings and can be resubmitted.
+
+The worker shares the web service's lifecycle: a free Render service must be awake to process work, and a hard crash can interrupt a running review. Orphaned research is marked interrupted after 30 minutes so it cannot block the queue indefinitely; it is not automatically rerun. This feature does not activate the separate scheduled trading monitor or provide a continuously running brokerage connection.

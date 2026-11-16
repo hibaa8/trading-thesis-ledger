@@ -52,7 +52,12 @@
   function table(headings, rows) {
     return `<div class="trading-table-wrap"><table class="trading-table"><thead><tr>${headings.map(h=>`<th scope="col">${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
   }
+  function renderReviews(data) {
+    const queue = (data.requests || []).filter(r=>["queued", "research_queued", "researching"].includes(r.payload.status));
+    $("trading-cycles").innerHTML = queue.map(r=>`<div class="info trading-queued"><span>${r.payload.status === "researching" ? "Research running" : "Review queued"} · ${esc(r.payload.tickers.join(", "))} · ${esc(time(r.created))}</span>${r.payload.status === "researching" ? "" : `<button type="button" class="trading-remove" data-remove-request="${esc(r.id)}" aria-label="Remove queued review for ${esc(r.payload.tickers.join(", "))}" title="Remove queued review">×</button>`}</div>`).join("") + (data.cycles.length ? data.cycles.map(renderCycle).join("") : '<p class="trading-empty">The first review will appear here with the analysts, debate, manager decision and sources.</p>');
+  }
   function render(data) {
+    renderReviews(data);
     const record = data.snapshot;
     if (!record) {
       note("Waiting for the first Robinhood sync from the connected agent.");
@@ -81,8 +86,6 @@
       return `<tr><td>${esc(o.symbol)}</td><td>${esc(label(o.side))}</td><td>${esc(label(o.state))}</td><td>${esc(o.dollar_based_amount ? money(o.dollar_based_amount.amount) : o.quantity)}</td><td>${esc(o.cumulative_quantity || "0")} shares${o.average_price ? " @ " + esc(money(o.average_price)) : ""}</td><td>${tracked ? "Thesis Ledger" : o.agent_initiated ? "Agent initiated" : "Account order"}</td></tr>`;
     })) : '<p class="trading-empty">No stock or ETF orders recorded by Robinhood.</p>';
     $("trading-events").innerHTML = events.length ? '<h3>Proposal activity</h3>' + events.map(e=>`<div class="trading-event"><strong>${esc(e.symbol)} · ${esc(label(e.side))} ${esc(money(e.amount_usd))}</strong><span>${esc(label(e.state))}</span><p>${esc(e.detail || "")}</p>${e.history?.length ? `<details><summary>Earlier states</summary>${e.history.map(h=>`<p>${esc(label(h.state))} · ${esc(time(h.recorded_at))}</p>`).join("")}</details>` : ""}</div>`).join("") : "";
-    const queue = (data.requests || []).filter(r=>r.payload.status === "queued");
-    $("trading-cycles").innerHTML = queue.map(r=>`<div class="info trading-queued"><span>Review queued · ${esc(r.payload.tickers.join(", "))} · ${esc(time(r.created))}</span><button type="button" class="trading-remove" data-remove-request="${esc(r.id)}" aria-label="Remove queued review for ${esc(r.payload.tickers.join(", "))}" title="Remove queued review">×</button></div>`).join("") + (data.cycles.length ? data.cycles.map(renderCycle).join("") : '<p class="trading-empty">The first review will appear here with the analysts, debate, manager decision and sources.</p>');
     $("trading-disclosures").innerHTML = (broker.market_data_disclosures || []).map(d=>`<p>${esc(d)}</p>`).join("");
     note(broker.orders_complete && broker.positions_complete ? "" : "Broker sync is incomplete. Review pagination before any proposal.");
   }
@@ -92,7 +95,7 @@
   function renderCycle(record) {
     const cycle = record.payload;
     const proposal = cycle.proposal;
-    const heading = proposal ? `${label(proposal.side)} ${proposal.ticker} · ${money(proposal.amount_usd)}` : cycle.status === "complete" ? "No trade proposed" : label(cycle.status);
+    const heading = proposal ? `${label(proposal.side)} ${proposal.ticker} · ${money(proposal.amount_usd)}` : cycle.status === "complete" ? (cycle.research_only ? "Research complete" : "No trade proposed") : label(cycle.status);
     const roleNames = {technical:"Technical",fundamentals:"Fundamentals",news:"News & catalysts",sentiment:"Sentiment"};
     return `<article class="panel trading-cycle"><div class="trading-cycle-heading"><h3>${esc(heading)}</h3><time>${esc(time(record.created))}</time></div><p>${esc(cycle.selection?.summary || cycle.reason || cycle.error || "Agents are reviewing the selected stocks.")}</p>${proposal ? `<p class="info">${esc(proposal.thesis)} Approval happens in Robinhood.</p>` : ""}${cycle.selection?.stance_reason ? `<p><strong>Manager reasoning.</strong> ${esc(cycle.selection.stance_reason)}</p>` : ""}${(cycle.candidates || []).map(c => `<details class="trading-candidate"><summary><strong>${esc(c.ticker)}</strong><span>${esc(c.decision?.stance || c.status)}</span><span>View reasoning</span></summary><p>${esc(c.decision?.summary || c.error || "")}</p>${c.exclusion_reason ? `<p>${esc(c.exclusion_reason)}</p>` : ""}<div class="trading-analysts">${Object.entries(roleNames).filter(([role])=>c.reports?.[role]).map(([role,name])=>reportCard(name,c.reports[role],c.evidence || [])).join("")}</div><details><summary>Bull / bear debate, manager & risk review</summary>${Object.entries(c.reports || {}).filter(([role])=>!roleNames[role]).map(([role,r])=>reportCard(label(role),r,c.evidence || [])).join("")}</details><details><summary>Saved workflow trace</summary><ol>${(c.trace || []).map(t=>`<li>${esc(t.stage)} · ${esc(t.detail)}</li>`).join("")}</ol></details></details>`).join("")}${cycle.experience ? `<details class="trading-memory"><summary>What the agents learned from earlier outcomes</summary><p>${esc(cycle.experience.summary)}</p><p>${esc(cycle.experience.stance_reason)}</p></details>` : ""}</article>`;
   }
@@ -106,7 +109,7 @@
       $("trading-content").hidden = false;
       $("trading-refresh").hidden = false;
       render(data);
-      timer = setTimeout(window.openTrading, 30000);
+      timer = setTimeout(window.openTrading, (data.requests || []).some(r=>["research_queued", "researching"].includes(r.payload.status)) ? 3000 : 30000);
     } catch (error) { note(error.message, true); }
   };
   $("trading-unlock").onsubmit = async event => {
@@ -136,11 +139,14 @@
     event.preventDefault();
     const tickers = [...new Set($("trading-symbols").value.toUpperCase().split(/[\s,]+/).filter(Boolean))];
     if (tickers.length < 2 || tickers.length > 5 || tickers.some(t=>!(/^[A-Z][A-Z0-9.\-]{0,9}$/).test(t))) return note("Enter 2 to 5 valid stock or ETF symbols.", true);
-    const id = crypto.randomUUID().replaceAll("-", "");
+    const button = event.currentTarget.querySelector("button[type=submit], button:not([type])");
+    if (button.disabled) return;
+    button.disabled = true;
     try {
-      await request("/records", {method:"POST", body:JSON.stringify({id,kind:"trading_request",created:new Date().toISOString(),payload:{tickers,status:"queued"}})});
+      await request("/reviews", {method:"POST", body:JSON.stringify({tickers})});
       await window.openTrading();
-      note("Your review is queued for the next scheduled agent check.");
+      note("Review submitted. Research starts now if idle, or waits for the current workflow to finish.");
     } catch (error) { note(error.message,true); }
+    finally { button.disabled = false; }
   };
 })();
