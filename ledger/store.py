@@ -106,6 +106,9 @@ class Store:
                 mode TEXT, as_of TEXT, created TEXT, body TEXT, digest TEXT);
             CREATE TABLE IF NOT EXISTS revisions(id TEXT PRIMARY KEY, memory_id TEXT, created TEXT,
                 scope TEXT, feedback TEXT);
+            CREATE TABLE IF NOT EXISTS trading_records(
+                kind TEXT NOT NULL, id TEXT NOT NULL, created TEXT NOT NULL, payload TEXT NOT NULL,
+                PRIMARY KEY(kind,id));
             CREATE TABLE IF NOT EXISTS trade_proposals(
                 id TEXT PRIMARY KEY, run_id TEXT NOT NULL UNIQUE, created TEXT NOT NULL,
                 trade_date TEXT NOT NULL, notional_cents INTEGER NOT NULL,
@@ -162,6 +165,26 @@ class Store:
                  json.dumps(proposal, allow_nan=False)),
             )
             return proposal
+
+    def save_trading_record(self, record):
+        from .trading_dashboard import merge_trading_record
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            rows = db.execute("SELECT payload FROM trading_records").fetchall()
+            record = merge_trading_record(record, [json.loads(row[0]) for row in rows])
+            db.execute("INSERT INTO trading_records VALUES(?,?,?,?) "
+                       "ON CONFLICT(kind,id) DO UPDATE SET payload=excluded.payload",
+                       (record["kind"], record["id"], record["created"], json.dumps(record)))
+
+    def trading_access_digest(self):
+        with self.connect() as db:
+            row = db.execute("SELECT payload FROM trading_records WHERE kind='trading_access' AND id='owner'").fetchone()
+        return json.loads(row[0])["payload"]["sha256"] if row else None
+
+    def trading_records(self):
+        with self.connect() as db:
+            rows = db.execute("SELECT payload FROM trading_records WHERE kind != 'trading_access' ORDER BY created DESC LIMIT 300").fetchall()
+        return [json.loads(row[0]) for row in rows]
 
     def runs(self):
         with self.connect() as db:

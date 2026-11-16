@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import hmac
 import os
 from typing import Literal
@@ -29,6 +30,7 @@ from .auth import AccountAuth, CALLBACK, SESSION, VERIFIER
 from .public import COOKIE, charge, visitor_cookie
 from .market import MarketBrief
 from .quotes import Quotes, quote_interval
+from .trading_dashboard import TradingRecord, trading_view
 from .config import load_config
 from .alpaca import company_news, intraday
 
@@ -88,6 +90,16 @@ def create_app(directory=None):
             authorized = token and hmac.compare_digest(
                 request.headers.get("authorization", ""), f"Bearer {token}"
             )
+            if path == "/api/trading" or path.startswith("/api/trading/"):
+                trading_token = os.getenv("LEDGER_TRADING_TOKEN", "")
+                supplied = request.headers.get("authorization", "").removeprefix("Bearer ")
+                expected_digest = hashlib.sha256(trading_token.encode()).hexdigest() if trading_token else store.trading_access_digest()
+                if not expected_digest or not hmac.compare_digest(
+                    hashlib.sha256(supplied.encode()).hexdigest(), expected_digest
+                ):
+                    return JSONResponse({"detail": "Private trading access required"}, status_code=401,
+                                        headers={"Cache-Control": "no-store"})
+                authorized = True
             public_enabled = os.getenv("LEDGER_PUBLIC") == "1"
             if public_enabled and not token:
                 return JSONResponse({"detail": "Workspace access is not configured."}, status_code=503)
@@ -126,7 +138,7 @@ def create_app(directory=None):
             response = JSONResponse(
                 {"detail": error.detail}, status_code=error.status_code, headers=error.headers
             )
-        if request.state.visitor:
+        if request.state.visitor or path.startswith("/api/trading"):
             response.headers["Cache-Control"] = "private, no-store"
         if cookie and path != "/api/auth/logout":
             response.set_cookie(
@@ -245,6 +257,18 @@ def create_app(directory=None):
         if background:
             return launch_research(scoped, scoped.new_run(req))
         return await scoped.run(req)
+
+    @app.get("/api/trading")
+    def private_trading():
+        return trading_view(store)
+
+    @app.post("/api/trading/records")
+    def sync_trading_record(record: TradingRecord):
+        try:
+            store.save_trading_record(record.model_dump(mode="json"))
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+        return {"id": record.id, "kind": record.kind, "saved": True}
 
     @app.get("/api/market")
     async def market_overview():

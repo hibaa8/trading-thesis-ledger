@@ -38,6 +38,32 @@ class PostgresStore:
         # The trading MCP is local-only; keep its budget ledger off the public site.
         return self.local.reserve_trade_proposal(proposal, daily_limit_cents)
 
+    def save_trading_record(self, record):
+        from .trading_dashboard import merge_trading_record
+        with self._db() as db:
+            db.execute("SELECT pg_advisory_xact_lock(hashtext('thesis-ledger-trial-budget'))")
+            rows = db.execute("SELECT payload FROM thesis_ledger.records WHERE workspace='owner' "
+                              "AND kind IN ('broker_snapshot','trade_event')").fetchall()
+            record = merge_trading_record(record, [row[0] for row in rows])
+            db.execute("INSERT INTO thesis_ledger.records VALUES (%s,%s,%s,%s,%s) "
+                       "ON CONFLICT (workspace,kind,id) DO UPDATE SET payload=excluded.payload",
+                       ("owner", record["kind"], record["id"], record["created"], Jsonb(record)))
+
+    def trading_access_digest(self):
+        with self._db() as db:
+            row = db.execute("SELECT payload->'payload'->>'sha256' FROM thesis_ledger.records "
+                             "WHERE workspace='owner' AND kind='trading_access' AND id='owner'").fetchone()
+        return row[0] if row else None
+
+    def trading_records(self):
+        with self._db() as db:
+            rows = db.execute(
+                "SELECT payload FROM thesis_ledger.records WHERE workspace='owner' "
+                "AND kind IN ('broker_snapshot','trading_cycle','trade_event','trading_request') "
+                "ORDER BY created DESC LIMIT 300"
+            ).fetchall()
+        return [row[0] for row in rows]
+
     def cached_forecast(self, key):
         return self.local.cached_forecast(key)
 
