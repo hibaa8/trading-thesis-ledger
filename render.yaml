@@ -21,3 +21,5 @@ services:
         generateValue: true
       - key: LEDGER_BROKER_ACCOUNT_LAST4
         value: "2100"
+      - key: LEDGER_BROKER_CALLBACK_URL
+        value: https://thesis-ledger.onrender.com/broker/callback
