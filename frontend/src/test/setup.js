@@ -1,6 +1,14 @@
-import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
-afterEach(() => { cleanup(); sessionStorage.clear(); localStorage.clear(); });
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi } from "vitest";
+afterEach(() => {
+  cleanup();
+  sessionStorage.clear();
+  localStorage.clear();
+});
 window.scrollTo = vi.fn();
-HTMLDialogElement.prototype.showModal = function () { this.open = true; };
-HTMLDialogElement.prototype.close = function () { this.open = false; };
+HTMLDialogElement.prototype.showModal = function () {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close = function () {
+  this.open = false;
+};
