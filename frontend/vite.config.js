@@ -13,6 +13,7 @@ export default defineConfig({
       "/api": "http://127.0.0.1:8000",
       "/auth": "http://127.0.0.1:8000",
       "/broker": "http://127.0.0.1:8000",
+      "/mcp": "http://127.0.0.1:8000",
     },
   },
   test: {

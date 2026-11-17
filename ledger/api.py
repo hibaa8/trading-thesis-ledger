@@ -18,7 +18,7 @@ from .store import open_store
 from .postgres_store import PostgresStore
 from .mcp_server import create_mcp
 
-WEB = Path(__file__).resolve().parent / "web"
+WEB = Path(__file__).resolve().parent / "web" / "react"
 
 
 from pydantic import BaseModel, Field

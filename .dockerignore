@@ -2,5 +2,13 @@
 .venv*
 data
 .env
+.env.*
+!.env.example
 vendor
 __pycache__
+*.pyc
+.pytest_cache
+frontend/node_modules
+ledger/web/react
+.taste-skill
+artifacts

@@ -1,3 +1,4 @@
+import re
 import csv
 from datetime import date, timedelta
 from io import BytesIO, StringIO
@@ -11,8 +12,15 @@ from ledger.data import demo_snapshot
 
 def test_ui_api_and_mcp(tmp_path):
     with TestClient(create_app(tmp_path), base_url="http://localhost:8000") as client:
-        assert client.get("/").status_code == 200
-        assert client.get("/static/app.js").status_code == 200
+        page = client.get("/")
+        assert page.status_code == 200
+        assert '<div id="root"></div>' in page.text
+        assets = re.findall(r'(?:src|href)="(/static/assets/[^"]+)"', page.text)
+        assert any(asset.endswith(".js") for asset in assets)
+        assert any(asset.endswith(".css") for asset in assets)
+        for asset in assets:
+            assert client.get(asset).status_code == 200
+        assert client.get("/static/THIRD_PARTY_NOTICES.txt").status_code == 200
         assert client.get("/health").json()["status"] == "ok"
         run = client.post("/api/research", json={"ticker": "AAPL", "mode": "demo"}).json()
         assert run["status"] == "complete", run

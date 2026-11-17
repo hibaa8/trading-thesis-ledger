@@ -17,6 +17,6 @@ thesis-ledger-trader-mcp = "ledger.trader_mcp:main"
 [tool.setuptools]
 packages = ["ledger"]
 [tool.setuptools.package-data]
-ledger = ["web/*"]
+ledger = ["web/react/*", "web/react/assets/*"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
