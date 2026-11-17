@@ -46,3 +46,30 @@ uv build --wheel
 Frontend tests use isolated test fixtures and mocked API responses: they never fetch live data, spend model credits, or submit brokerage orders. They cover navigation and symbol changes, Markdown streaming and unsafe input, horizon selection, report tabs/export, memory revisions, interrupted report recovery, MCP copy controls, private access isolation, queued review cancellation and request cleanup. Backend tests exercise the built asset routes alongside the existing API/MCP contracts.
 
 Visual verification compares the original frontend and React build with identical local test responses. Test fixtures are excluded from the production import graph. Live market sources, databases and authentication configuration are unchanged by this migration.
+
+## Migration verification record
+
+Validated November 16, 2026: 15 frontend tests and 89 backend tests passed locally and in GitHub Actions. The Python wheel contains the built HTML, JavaScript, CSS and third-party notices. Render serves the React entry and its hashed assets with HTTP 200; `/health` is healthy, `/api/config` responds, and unauthenticated `/api/trading` remains HTTP 401. No paid research requests or brokerage actions were performed for this verification.
+
+I compared baseline and React desktop captures using identical isolated API responses, then inspected the React dashboard at 1440, 1024, 820, 768 and 390 pixels and chat at 390 × 844. The mobile composer remains within the viewport. Existing colors, typography, chart geometry, cards, sidebar and responsive rules were retained. No new visual assets, photographs, assumed business facts, palette or animation system were introduced.
+
+**Design skill gate: GATE: DONE.** The scope requires “keeping the current design and all existing features working.” The general marketing-page gate had 14 open findings, retained rather than redesigning the application:
+
+| Check | Target / retained behavior |
+|---|---|
+| overlap-text | Movers & headlines section |
+| cut-text | GOOGL row inside the deliberately scrollable watchlist |
+| moment-none | No marketing animation moment |
+| hero-screen | Existing application footer |
+| section-height | Existing application footer |
+| container-edges | Workspace header |
+| container-edges | Workspace footer |
+| container-edges | Footer disclosure text |
+| nav | Wrapping mobile application navigation |
+| off-grid | Mobile Deep Research navigation button |
+| off-grid | Mobile Research history navigation button |
+| container | Application layout has no marketing `.wrap` |
+| copy-slop-word | Existing owner-access “Unlock Thesis Ledger” dialog |
+| copy-slop-word | Existing “Unlock” button |
+
+These are open findings, not a claimed visual-gate pass. The checker also reported 19 nonblocking warnings around application headings, compact controls, fixture/source links and placeholder-like test content. They were retained under the same design-preserving scope. No checker files were changed and no findings were hidden. The separate layout checker errored while expecting a marketing section structure; screenshot review was used instead. A performance-specific gate was not run. The local Docker daemon was unavailable, so container execution was not checked locally; the deployed Render build and served production assets were verified.
