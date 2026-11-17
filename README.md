@@ -11,10 +11,14 @@ I built Thesis Ledger to ask questions about U.S. stocks, compare bull and bear 
 ```sh
 uv sync --extra dev
 cp -n .env.example .env
+npm ci --prefix frontend
+npm run build --prefix frontend
 uv run thesis-ledger
 ```
 
-Open [localhost:8000](http://127.0.0.1:8000). Choose **Research chat** for a conversation or **Research desk** for a structured run. Use **Forecast** to explore historical-return scenarios or run Kronos when installed.
+Open [localhost:8000](http://127.0.0.1:8000). Choose **Research chat** for a conversation, **Research desk** for market coverage, or **Deep Research** for a structured report. **Forecast** shows historical-return scenarios.
+
+The frontend uses React and Vite (Node 22.12+ for builds); FastAPI serves the production bundle and all APIs. For frontend development, keep FastAPI on port 8000 and run `npm run dev --prefix frontend` in another terminal. Open the Vite URL, normally [localhost:5173/static/](http://127.0.0.1:5173/static/). Vite proxies API, authentication, brokerage callback, and MCP paths to FastAPI. Rebuild before running the production server after frontend changes. See [frontend development and validation](docs/frontend.md).
 
 | Feature | Environment |
 |---|---|
@@ -30,7 +34,7 @@ The app loads `.env` from the working directory. After installing the optional K
 
 ```mermaid
 flowchart TD
-    UI["Browser · research dashboard and chat"] --> Chat["OpenAI · streaming chat and tool calls"]
+    UI["React browser · research dashboard and chat"] --> Chat["OpenAI · streaming chat and tool calls"]
     UI --> K["Forecast tab · standalone Kronos-small"]
     K -->|Completed daily bars only| AV["Alpha Vantage"]
     UI --> H["Research harness"]

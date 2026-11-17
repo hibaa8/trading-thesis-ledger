@@ -42,7 +42,7 @@ Local runs and memories use your local database. A localhost URL is accessible o
 
 Use a Python/container host with persistent disk (for example, an existing VPS or container service). This service cannot run unchanged as a static site or a Cloudflare Worker because SQLite and optional PyTorch execute in Python.
 
-1. Build the Dockerfile.
+1. Build the Dockerfile. Its Node build stage compiles the React frontend; the final Python image serves those assets through FastAPI. No separate frontend service is needed.
 2. Mount a persistent writable volume at `/data`.
 3. Set `LEDGER_API_TOKEN` to a random secret of at least 32 characters.
 4. Set `LEDGER_ALLOWED_HOSTS=research.your-domain.example` to your actual hostname. Include `localhost` only if required for internal checks.

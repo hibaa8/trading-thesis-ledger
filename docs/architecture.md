@@ -1,5 +1,8 @@
 # Architecture and decisions
 
+The browser frontend is React, built by Vite. Feature components retain the existing layout and use the same FastAPI JSON and streamed NDJSON endpoints. FastAPI serves the hashed production assets from `/static/`; the Docker build compiles them in a Node stage and ships a Python-only runtime. Frontend state owns navigation, selected symbols and report views, while request cancellation prevents stale responses from replacing a newer selection. The research harness, stores, provider clients, MCP transports and brokerage authorization remain on the backend.
+
+
 ```mermaid
 flowchart TD
     UI["Browser · research dashboard and chat"] --> Chat["OpenAI · streaming chat and tool calls"]
