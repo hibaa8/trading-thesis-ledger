@@ -1,6 +1,10 @@
 export default function Method({ active }) {
   return (
-    <main id="method" className={"page" + (active ? " active" : "")}>
+    <main
+      id="method"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="eyebrow">RESEARCH WORKFLOW</div>
       <h1>How it works</h1>
       <p className="subtitle">

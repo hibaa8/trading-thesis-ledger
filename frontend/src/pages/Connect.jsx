@@ -43,7 +43,11 @@ export default function Connect({ active, config }) {
     }
   }
   return (
-    <main id="connect" className={"page" + (active ? " active" : "")}>
+    <main
+      id="connect"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="eyebrow">ONE WORKFLOW. YOUR FAVORITE CLIENT.</div>
       <h1>Research, wherever you work.</h1>
       <p className="subtitle">

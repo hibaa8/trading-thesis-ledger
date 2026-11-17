@@ -136,7 +136,11 @@ export default function Chat({ active, ready, ticker, onTicker }) {
     }
   }
   return (
-    <main id="chat" className={"page" + (active ? " active" : "")}>
+    <main
+      id="chat"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="eyebrow">MARKET RESEARCH</div>
       <h1>Research chat</h1>
       <p className="subtitle">

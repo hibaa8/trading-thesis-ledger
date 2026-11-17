@@ -1,0 +1,1065 @@
+{
+  "id": "7c20030a885d4c1d8addd8612e846682",
+  "created": "2026-11-17T01:09:21.680303+00:00",
+  "status": "complete",
+  "request": {
+    "ticker": "NVDA",
+    "as_of": "2026-11-16",
+    "horizon": 5,
+    "mode": "live",
+    "forecast": "bootstrap",
+    "question": "What supports or challenges the investment thesis?",
+    "rounds": 1,
+    "use_memory": true
+  },
+  "reports": {
+    "technical": {
+      "role": "technical",
+      "stance": "bullish",
+      "summary": "The synthetic series has +3.4% 20-session momentum, RSI 63, and 24.5% annualized volatility. Trend is uptrend; these indicators describe the fixture, not a real opportunity.",
+      "stance_reason": "The sample has positive 20-session momentum.",
+      "evidence_ids": ["prices"],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    },
+    "fundamentals": {
+      "role": "fundamentals",
+      "stance": "neutral",
+      "summary": "The illustrative 18% revenue growth and 27% margin support a quality-growth narrative, while a 32x forward multiple leaves execution risk. These are invented fixture assumptions.",
+      "stance_reason": "Illustrative growth and margins are offset by a demanding valuation.",
+      "evidence_ids": ["fundamentals"],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    },
+    "news": {
+      "role": "news",
+      "stance": "neutral",
+      "summary": "The illustrative demand catalyst conflicts with customer concentration and supply constraints. Real earnings releases and dated reporting are needed to resolve the thesis.",
+      "stance_reason": "The illustrative demand catalyst is offset by supply and concentration risks.",
+      "evidence_ids": ["news"],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    },
+    "sentiment": {
+      "role": "sentiment",
+      "stance": "abstain",
+      "summary": "Abstain: no social sentiment dataset is connected. News coverage alone cannot establish investor positioning.",
+      "stance_reason": "The fixture has no direct measure of investor sentiment.",
+      "evidence_ids": [],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    },
+    "bull-1": {
+      "role": "bull",
+      "stance": "bullish",
+      "summary": "The strongest illustrative bull case combines the growth fixture with +3.4% recent momentum. It would need real evidence of demand persistence and margins before becoming actionable.",
+      "stance_reason": "The illustrative growth assumptions support the upside case.",
+      "evidence_ids": ["prices", "fundamentals", "news"],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    },
+    "bear-1": {
+      "role": "bear",
+      "stance": "bearish",
+      "summary": "The illustrative bear case challenges the growth premium: concentration risk and supply constraints could compress margins. Price momentum cannot establish fundamental value.",
+      "stance_reason": "The illustrative supply and concentration risks challenge the growth premium.",
+      "evidence_ids": ["prices", "fundamentals", "news"],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    },
+    "manager": {
+      "role": "manager",
+      "stance": "abstain",
+      "summary": "Keep this thesis on the research watchlist. The illustrative growth case remains contested by valuation and concentration risk. Verify primary financial disclosures before drawing an investment conclusion.",
+      "stance_reason": "The fixture cannot substantiate a real investment conclusion.",
+      "evidence_ids": ["prices", "fundamentals", "news"],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    },
+    "risk": {
+      "role": "risk",
+      "stance": "abstain",
+      "summary": "Abstain from an actionable call: this run uses synthetic data. Forecast scenarios are uncalibrated, social sentiment is missing, and the debate does not establish predictive accuracy.",
+      "stance_reason": "Synthetic inputs and uncalibrated scenarios cannot support an actionable call.",
+      "evidence_ids": ["prices", "fundamentals", "news"],
+      "risks": [
+        "Synthetic demonstration; no investment conclusion is supported."
+      ],
+      "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+    }
+  },
+  "trace": [
+    {
+      "stage": "context",
+      "detail": "Saved immutable source snapshot and date-filtered memory",
+      "at": "2026-11-17T01:09:21.695841+00:00"
+    },
+    {
+      "stage": "forecast",
+      "detail": "Saved scenario paths; evaluated bootstrap against no-change baseline",
+      "at": "2026-11-17T01:09:21.729569+00:00"
+    },
+    {
+      "stage": "technical",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.733125+00:00"
+    },
+    {
+      "stage": "fundamentals",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.735258+00:00"
+    },
+    {
+      "stage": "news",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.736032+00:00"
+    },
+    {
+      "stage": "sentiment",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.736890+00:00"
+    },
+    {
+      "stage": "bull",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.737747+00:00"
+    },
+    {
+      "stage": "bear",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.738537+00:00"
+    },
+    {
+      "stage": "manager",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.739407+00:00"
+    },
+    {
+      "stage": "risk",
+      "detail": "Validated report and evidence references",
+      "at": "2026-11-17T01:09:21.740197+00:00"
+    },
+    {
+      "stage": "complete",
+      "detail": "Research saved; compact thesis written to memory",
+      "at": "2026-11-17T01:09:21.740920+00:00"
+    }
+  ],
+  "calls": 8,
+  "snapshot": {
+    "bars": [
+      {
+        "date": "2026-06-26",
+        "open": 120.0,
+        "high": 120.7961,
+        "low": 118.819,
+        "close": 119.6125,
+        "volume": 64208459
+      },
+      {
+        "date": "2026-06-29",
+        "open": 119.6125,
+        "high": 120.1555,
+        "low": 117.0325,
+        "close": 117.5662,
+        "volume": 23057456
+      },
+      {
+        "date": "2026-06-30",
+        "open": 117.5662,
+        "high": 120.7759,
+        "low": 116.6791,
+        "close": 119.8714,
+        "volume": 22599891
+      },
+      {
+        "date": "2026-07-01",
+        "open": 119.8714,
+        "high": 120.6905,
+        "low": 117.7017,
+        "close": 118.5114,
+        "volume": 45159013
+      },
+      {
+        "date": "2026-07-02",
+        "open": 118.5114,
+        "high": 120.231,
+        "low": 115.8267,
+        "close": 117.5321,
+        "volume": 79731598
+      },
+      {
+        "date": "2026-07-06",
+        "open": 117.5321,
+        "high": 118.1827,
+        "low": 114.0599,
+        "close": 114.6949,
+        "volume": 64664847
+      },
+      {
+        "date": "2026-07-07",
+        "open": 114.6949,
+        "high": 115.3793,
+        "low": 111.8414,
+        "close": 112.5128,
+        "volume": 78386786
+      },
+      {
+        "date": "2026-07-08",
+        "open": 112.5128,
+        "high": 114.7519,
+        "low": 111.3585,
+        "close": 113.5865,
+        "volume": 55192471
+      },
+      {
+        "date": "2026-07-09",
+        "open": 113.5865,
+        "high": 114.2224,
+        "low": 110.6428,
+        "close": 111.2657,
+        "volume": 32305491
+      },
+      {
+        "date": "2026-07-10",
+        "open": 111.2657,
+        "high": 113.0085,
+        "low": 109.1201,
+        "close": 110.8565,
+        "volume": 60432165
+      },
+      {
+        "date": "2026-07-13",
+        "open": 110.8565,
+        "high": 113.0041,
+        "low": 109.7636,
+        "close": 111.9009,
+        "volume": 69977368
+      },
+      {
+        "date": "2026-07-14",
+        "open": 111.9009,
+        "high": 116.0322,
+        "low": 109.4882,
+        "close": 113.5832,
+        "volume": 58759139
+      },
+      {
+        "date": "2026-07-15",
+        "open": 113.5832,
+        "high": 114.5353,
+        "low": 112.4101,
+        "close": 113.3603,
+        "volume": 30148421
+      },
+      {
+        "date": "2026-07-16",
+        "open": 113.3603,
+        "high": 113.5818,
+        "low": 109.667,
+        "close": 109.8817,
+        "volume": 67536741
+      },
+      {
+        "date": "2026-07-17",
+        "open": 109.8817,
+        "high": 111.2167,
+        "low": 107.094,
+        "close": 108.4111,
+        "volume": 17163525
+      },
+      {
+        "date": "2026-07-20",
+        "open": 108.4111,
+        "high": 108.6926,
+        "low": 107.9921,
+        "close": 108.2733,
+        "volume": 52673692
+      },
+      {
+        "date": "2026-07-21",
+        "open": 108.2733,
+        "high": 109.4104,
+        "low": 107.5866,
+        "close": 108.7209,
+        "volume": 24145624
+      },
+      {
+        "date": "2026-07-22",
+        "open": 108.7209,
+        "high": 113.3609,
+        "low": 108.1255,
+        "close": 112.7434,
+        "volume": 70628965
+      },
+      {
+        "date": "2026-07-23",
+        "open": 112.7434,
+        "high": 114.9644,
+        "low": 111.654,
+        "close": 113.8641,
+        "volume": 36711417
+      },
+      {
+        "date": "2026-07-24",
+        "open": 113.8641,
+        "high": 115.3054,
+        "low": 113.2539,
+        "close": 114.6907,
+        "volume": 58349119
+      },
+      {
+        "date": "2026-07-27",
+        "open": 114.6907,
+        "high": 119.0858,
+        "low": 113.2066,
+        "close": 117.5646,
+        "volume": 75770267
+      },
+      {
+        "date": "2026-07-28",
+        "open": 117.5646,
+        "high": 118.126,
+        "low": 115.0839,
+        "close": 115.6361,
+        "volume": 58246327
+      },
+      {
+        "date": "2026-07-29",
+        "open": 115.6361,
+        "high": 118.6047,
+        "low": 115.0668,
+        "close": 118.0237,
+        "volume": 57980065
+      },
+      {
+        "date": "2026-07-30",
+        "open": 118.0237,
+        "high": 119.3454,
+        "low": 114.3817,
+        "close": 115.6771,
+        "volume": 54406743
+      },
+      {
+        "date": "2026-07-31",
+        "open": 115.6771,
+        "high": 116.5684,
+        "low": 114.0358,
+        "close": 114.9213,
+        "volume": 28548023
+      },
+      {
+        "date": "2026-08-03",
+        "open": 114.9213,
+        "high": 116.1272,
+        "low": 113.0696,
+        "close": 114.2686,
+        "volume": 36089063
+      },
+      {
+        "date": "2026-08-04",
+        "open": 114.2686,
+        "high": 117.9798,
+        "low": 112.9918,
+        "close": 116.6761,
+        "volume": 67324117
+      },
+      {
+        "date": "2026-08-05",
+        "open": 116.6761,
+        "high": 119.5619,
+        "low": 116.2988,
+        "close": 119.1766,
+        "volume": 23299420
+      },
+      {
+        "date": "2026-08-06",
+        "open": 119.1766,
+        "high": 119.7531,
+        "low": 116.0909,
+        "close": 116.6552,
+        "volume": 40946805
+      },
+      {
+        "date": "2026-08-07",
+        "open": 116.6552,
+        "high": 117.3486,
+        "low": 116.3106,
+        "close": 117.003,
+        "volume": 24579161
+      },
+      {
+        "date": "2026-08-10",
+        "open": 117.003,
+        "high": 120.5544,
+        "low": 115.167,
+        "close": 118.6919,
+        "volume": 44675559
+      },
+      {
+        "date": "2026-08-11",
+        "open": 118.6919,
+        "high": 122.6897,
+        "low": 117.4786,
+        "close": 121.4482,
+        "volume": 43777882
+      },
+      {
+        "date": "2026-08-12",
+        "open": 121.4482,
+        "high": 121.833,
+        "low": 118.7071,
+        "close": 119.0844,
+        "volume": 40718100
+      },
+      {
+        "date": "2026-08-13",
+        "open": 119.0844,
+        "high": 121.2709,
+        "low": 118.146,
+        "close": 120.3228,
+        "volume": 27355994
+      },
+      {
+        "date": "2026-08-14",
+        "open": 120.3228,
+        "high": 123.7251,
+        "low": 119.7145,
+        "close": 123.1027,
+        "volume": 79816509
+      },
+      {
+        "date": "2026-08-17",
+        "open": 123.1027,
+        "high": 123.9887,
+        "low": 120.7211,
+        "close": 121.5962,
+        "volume": 42545267
+      },
+      {
+        "date": "2026-08-18",
+        "open": 121.5962,
+        "high": 125.3475,
+        "low": 120.8758,
+        "close": 124.6093,
+        "volume": 52425440
+      },
+      {
+        "date": "2026-08-19",
+        "open": 124.6093,
+        "high": 125.6268,
+        "low": 123.4671,
+        "close": 124.4836,
+        "volume": 16622678
+      },
+      {
+        "date": "2026-08-20",
+        "open": 124.4836,
+        "high": 125.6074,
+        "low": 123.4835,
+        "close": 124.6063,
+        "volume": 44211567
+      },
+      {
+        "date": "2026-08-21",
+        "open": 124.6063,
+        "high": 125.4951,
+        "low": 120.1682,
+        "close": 121.0315,
+        "volume": 33082502
+      },
+      {
+        "date": "2026-08-24",
+        "open": 121.0315,
+        "high": 121.9887,
+        "low": 119.8807,
+        "close": 120.8364,
+        "volume": 22462932
+      },
+      {
+        "date": "2026-08-25",
+        "open": 120.8364,
+        "high": 122.244,
+        "low": 116.3419,
+        "close": 117.7132,
+        "volume": 63254120
+      },
+      {
+        "date": "2026-08-26",
+        "open": 117.7132,
+        "high": 118.6117,
+        "low": 115.2201,
+        "close": 116.1063,
+        "volume": 16637757
+      },
+      {
+        "date": "2026-08-27",
+        "open": 116.1063,
+        "high": 118.5413,
+        "low": 115.5066,
+        "close": 117.9321,
+        "volume": 22370546
+      },
+      {
+        "date": "2026-08-28",
+        "open": 117.9321,
+        "high": 118.5156,
+        "low": 117.0915,
+        "close": 117.6738,
+        "volume": 30714811
+      },
+      {
+        "date": "2026-08-31",
+        "open": 117.6738,
+        "high": 119.5269,
+        "low": 114.8572,
+        "close": 116.6948,
+        "volume": 21646653
+      },
+      {
+        "date": "2026-09-01",
+        "open": 116.6948,
+        "high": 118.3891,
+        "low": 113.9903,
+        "close": 115.6697,
+        "volume": 21529153
+      },
+      {
+        "date": "2026-09-02",
+        "open": 115.6697,
+        "high": 118.3566,
+        "low": 114.429,
+        "close": 117.1006,
+        "volume": 54504795
+      },
+      {
+        "date": "2026-09-03",
+        "open": 117.1006,
+        "high": 118.8235,
+        "low": 117.067,
+        "close": 118.7894,
+        "volume": 13537534
+      },
+      {
+        "date": "2026-09-04",
+        "open": 118.7894,
+        "high": 119.8476,
+        "low": 115.5232,
+        "close": 116.5615,
+        "volume": 53561302
+      },
+      {
+        "date": "2026-09-08",
+        "open": 116.5615,
+        "high": 118.3575,
+        "low": 115.3637,
+        "close": 117.1536,
+        "volume": 49697032
+      },
+      {
+        "date": "2026-09-09",
+        "open": 117.1536,
+        "high": 118.6421,
+        "low": 116.2987,
+        "close": 117.7827,
+        "volume": 16603428
+      },
+      {
+        "date": "2026-09-10",
+        "open": 117.7827,
+        "high": 118.9929,
+        "low": 117.6862,
+        "close": 118.8954,
+        "volume": 20805795
+      },
+      {
+        "date": "2026-09-11",
+        "open": 118.8954,
+        "high": 121.8672,
+        "low": 117.3288,
+        "close": 120.2823,
+        "volume": 61846123
+      },
+      {
+        "date": "2026-09-14",
+        "open": 120.2823,
+        "high": 120.7433,
+        "low": 119.1822,
+        "close": 119.6407,
+        "volume": 40281925
+      },
+      {
+        "date": "2026-09-15",
+        "open": 119.6407,
+        "high": 122.0309,
+        "low": 118.4985,
+        "close": 120.8769,
+        "volume": 34600717
+      },
+      {
+        "date": "2026-09-16",
+        "open": 120.8769,
+        "high": 122.5319,
+        "low": 119.8992,
+        "close": 121.5487,
+        "volume": 17731431
+      },
+      {
+        "date": "2026-09-17",
+        "open": 121.5487,
+        "high": 122.5547,
+        "low": 121.0324,
+        "close": 122.0363,
+        "volume": 35162401
+      },
+      {
+        "date": "2026-09-18",
+        "open": 122.0363,
+        "high": 126.8063,
+        "low": 120.3859,
+        "close": 125.1143,
+        "volume": 31993400
+      },
+      {
+        "date": "2026-09-21",
+        "open": 125.1143,
+        "high": 125.4765,
+        "low": 124.4123,
+        "close": 124.7734,
+        "volume": 56616729
+      },
+      {
+        "date": "2026-09-22",
+        "open": 124.7734,
+        "high": 125.1424,
+        "low": 122.3071,
+        "close": 122.6699,
+        "volume": 25342248
+      },
+      {
+        "date": "2026-09-23",
+        "open": 122.6699,
+        "high": 125.4363,
+        "low": 121.3376,
+        "close": 124.0887,
+        "volume": 30292111
+      },
+      {
+        "date": "2026-09-24",
+        "open": 124.0887,
+        "high": 124.9034,
+        "low": 121.6503,
+        "close": 122.4543,
+        "volume": 25221952
+      },
+      {
+        "date": "2026-09-25",
+        "open": 122.4543,
+        "high": 123.3896,
+        "low": 118.8631,
+        "close": 119.7779,
+        "volume": 42620235
+      },
+      {
+        "date": "2026-09-28",
+        "open": 119.7779,
+        "high": 120.5657,
+        "low": 119.0728,
+        "close": 119.8601,
+        "volume": 30660524
+      },
+      {
+        "date": "2026-09-29",
+        "open": 119.8601,
+        "high": 120.8897,
+        "low": 116.1422,
+        "close": 117.1485,
+        "volume": 69592690
+      },
+      {
+        "date": "2026-09-30",
+        "open": 117.1485,
+        "high": 118.0703,
+        "low": 114.0158,
+        "close": 114.9201,
+        "volume": 69680909
+      },
+      {
+        "date": "2026-10-01",
+        "open": 114.9201,
+        "high": 116.0374,
+        "low": 113.1113,
+        "close": 114.2219,
+        "volume": 66550955
+      },
+      {
+        "date": "2026-10-02",
+        "open": 114.2219,
+        "high": 115.5901,
+        "low": 113.3631,
+        "close": 114.7275,
+        "volume": 75221568
+      },
+      {
+        "date": "2026-10-05",
+        "open": 114.7275,
+        "high": 115.5056,
+        "low": 114.4573,
+        "close": 115.2342,
+        "volume": 52038490
+      },
+      {
+        "date": "2026-10-06",
+        "open": 115.2342,
+        "high": 117.647,
+        "low": 114.3413,
+        "close": 116.7425,
+        "volume": 24668376
+      },
+      {
+        "date": "2026-10-07",
+        "open": 116.7425,
+        "high": 117.7095,
+        "low": 113.7218,
+        "close": 114.6717,
+        "volume": 73312821
+      },
+      {
+        "date": "2026-10-08",
+        "open": 114.6717,
+        "high": 115.1433,
+        "low": 114.2832,
+        "close": 114.7546,
+        "volume": 57161958
+      },
+      {
+        "date": "2026-10-09",
+        "open": 114.7546,
+        "high": 115.3095,
+        "low": 113.9777,
+        "close": 114.5316,
+        "volume": 16804853
+      },
+      {
+        "date": "2026-10-12",
+        "open": 114.5316,
+        "high": 115.7243,
+        "low": 111.5045,
+        "close": 112.6778,
+        "volume": 14983644
+      },
+      {
+        "date": "2026-10-13",
+        "open": 112.6778,
+        "high": 114.1014,
+        "low": 109.2469,
+        "close": 110.6447,
+        "volume": 76612439
+      },
+      {
+        "date": "2026-10-14",
+        "open": 110.6447,
+        "high": 115.0891,
+        "low": 109.7136,
+        "close": 114.1286,
+        "volume": 14315783
+      },
+      {
+        "date": "2026-10-15",
+        "open": 114.1286,
+        "high": 115.7514,
+        "low": 113.3895,
+        "close": 115.0066,
+        "volume": 17374856
+      },
+      {
+        "date": "2026-10-16",
+        "open": 115.0066,
+        "high": 116.032,
+        "low": 114.3316,
+        "close": 115.355,
+        "volume": 67346585
+      },
+      {
+        "date": "2026-10-19",
+        "open": 115.355,
+        "high": 115.8248,
+        "low": 113.9919,
+        "close": 114.458,
+        "volume": 23568998
+      },
+      {
+        "date": "2026-10-20",
+        "open": 114.458,
+        "high": 115.1963,
+        "low": 110.645,
+        "close": 111.3633,
+        "volume": 14749179
+      },
+      {
+        "date": "2026-10-21",
+        "open": 111.3633,
+        "high": 112.9317,
+        "low": 109.407,
+        "close": 110.9698,
+        "volume": 19785514
+      },
+      {
+        "date": "2026-10-22",
+        "open": 110.9698,
+        "high": 113.0109,
+        "low": 109.389,
+        "close": 111.4236,
+        "volume": 40265058
+      },
+      {
+        "date": "2026-10-23",
+        "open": 111.4236,
+        "high": 115.2036,
+        "low": 110.3665,
+        "close": 114.1209,
+        "volume": 46906305
+      },
+      {
+        "date": "2026-10-26",
+        "open": 114.1209,
+        "high": 115.746,
+        "low": 112.6425,
+        "close": 114.2657,
+        "volume": 65190662
+      },
+      {
+        "date": "2026-10-27",
+        "open": 114.2657,
+        "high": 114.4608,
+        "low": 113.4309,
+        "close": 113.6249,
+        "volume": 58515574
+      },
+      {
+        "date": "2026-10-28",
+        "open": 113.6249,
+        "high": 114.0225,
+        "low": 113.4336,
+        "close": 113.8309,
+        "volume": 64395991
+      },
+      {
+        "date": "2026-10-29",
+        "open": 113.8309,
+        "high": 114.4219,
+        "low": 110.5847,
+        "close": 111.1619,
+        "volume": 65596444
+      },
+      {
+        "date": "2026-10-30",
+        "open": 111.1619,
+        "high": 112.5678,
+        "low": 107.1201,
+        "close": 108.4923,
+        "volume": 24644768
+      },
+      {
+        "date": "2026-11-02",
+        "open": 108.4923,
+        "high": 111.0065,
+        "low": 107.8201,
+        "close": 110.3229,
+        "volume": 77558146
+      },
+      {
+        "date": "2026-11-03",
+        "open": 110.3229,
+        "high": 112.5053,
+        "low": 109.2687,
+        "close": 111.4404,
+        "volume": 70851367
+      },
+      {
+        "date": "2026-11-04",
+        "open": 111.4404,
+        "high": 113.4903,
+        "low": 110.6855,
+        "close": 112.7267,
+        "volume": 78976420
+      },
+      {
+        "date": "2026-11-05",
+        "open": 112.7267,
+        "high": 113.3373,
+        "low": 111.9129,
+        "close": 112.5224,
+        "volume": 56723397
+      },
+      {
+        "date": "2026-11-06",
+        "open": 112.5224,
+        "high": 114.1553,
+        "low": 111.6743,
+        "close": 113.3013,
+        "volume": 25123930
+      },
+      {
+        "date": "2026-11-09",
+        "open": 113.3013,
+        "high": 114.3324,
+        "low": 111.2521,
+        "close": 112.2739,
+        "volume": 17903326
+      },
+      {
+        "date": "2026-11-10",
+        "open": 112.2739,
+        "high": 112.7101,
+        "low": 112.1821,
+        "close": 112.618,
+        "volume": 72121294
+      },
+      {
+        "date": "2026-11-11",
+        "open": 112.618,
+        "high": 116.9371,
+        "low": 111.045,
+        "close": 115.3263,
+        "volume": 66573740
+      },
+      {
+        "date": "2026-11-12",
+        "open": 115.3263,
+        "high": 116.7339,
+        "low": 114.4351,
+        "close": 115.8387,
+        "volume": 52690620
+      },
+      {
+        "date": "2026-11-13",
+        "open": 115.8387,
+        "high": 117.5352,
+        "low": 114.5184,
+        "close": 116.2107,
+        "volume": 41114865
+      },
+      {
+        "date": "2026-11-16",
+        "open": 116.2107,
+        "high": 118.5525,
+        "low": 116.059,
+        "close": 118.3979,
+        "volume": 37872684
+      }
+    ],
+    "evidence": [
+      {
+        "id": "prices",
+        "kind": "market",
+        "title": "Synthetic daily OHLCV fixture",
+        "url": null,
+        "published": "2026-11-16",
+        "text": "Illustrative generated prices; not real market history."
+      },
+      {
+        "id": "fundamentals",
+        "kind": "fundamentals",
+        "title": "Illustrative company fundamentals",
+        "url": null,
+        "published": "2026-11-16",
+        "text": "Synthetic fixture: revenue growth 18%, operating margin 27%, forward P/E 32. These are invented demonstration values."
+      },
+      {
+        "id": "news",
+        "kind": "news",
+        "title": "Illustrative demand and concentration scenario",
+        "url": null,
+        "published": "2026-11-16",
+        "text": "Invented scenario: demand is growing, but customer concentration and supply constraints remain material risks. No real news is represented."
+      }
+    ],
+    "provider": "Test market data",
+    "retrieved_at": "2026-11-17T01:09:21.695161+00:00",
+    "warnings": []
+  },
+  "metrics": {
+    "last": 118.3979,
+    "change": 1.8820986363561998,
+    "sma20": 113.01162499999998,
+    "sma50": 115.92821999999998,
+    "rsi": 63.322280278670995,
+    "volatility": 24.45487965949217,
+    "momentum": 3.4422233483024423,
+    "regime": "uptrend"
+  },
+  "memories": [],
+  "forecast": {
+    "engine": "bootstrap",
+    "label": "Historical-return bootstrap \u00b7 500 paths",
+    "points": [
+      {
+        "date": "2026-11-17",
+        "low": 116.14573390004999,
+        "median": 118.61255336735174,
+        "high": 120.39563804905976
+      },
+      {
+        "date": "2026-11-18",
+        "low": 115.56571445373118,
+        "median": 118.36424335122666,
+        "high": 121.25006471974011
+      },
+      {
+        "date": "2026-11-19",
+        "low": 114.8950437538256,
+        "median": 118.15699245075174,
+        "high": 121.83786455889029
+      },
+      {
+        "date": "2026-11-20",
+        "low": 114.13339339440385,
+        "median": 118.05623164053284,
+        "high": 122.39255512692993
+      },
+      {
+        "date": "2026-11-23",
+        "low": 113.92775045134472,
+        "median": 118.09250161871584,
+        "high": 122.77456055988276
+      }
+    ],
+    "expected_return": -0.25794239702238153,
+    "disclaimer": "10\u201390% sampled scenario range, not a calibrated confidence interval. No proven trading edge."
+  },
+  "evaluation": {
+    "windows": 12,
+    "bootstrap_mape": 3.006623044857385,
+    "naive_mape": 2.757074212442379,
+    "scenario_coverage": 83.33333333333334,
+    "note": "Rolling origin, price-only diagnostic. Not a strategy backtest; no returns, costs, or alpha claim."
+  },
+  "decision": {
+    "role": "manager",
+    "stance": "abstain",
+    "summary": "Keep this thesis on the research watchlist. The illustrative growth case remains contested by valuation and concentration risk. Verify primary financial disclosures before drawing an investment conclusion.",
+    "stance_reason": "The fixture cannot substantiate a real investment conclusion.",
+    "evidence_ids": ["prices", "fundamentals", "news"],
+    "risks": [
+      "Synthetic demonstration; no investment conclusion is supported."
+    ],
+    "invalidation": "Revisit after verified financial disclosures or a material change in the observed trend."
+  },
+  "disagreement": false,
+  "elapsed_seconds": 0.06
+}

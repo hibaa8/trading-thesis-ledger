@@ -77,7 +77,11 @@ export default function DeepResearch({
     }
   }
   return (
-    <main id="deep" className={"page" + (active ? " active" : "")}>
+    <main
+      id="deep"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="eyebrow">MULTI-AGENT ANALYSIS</div>
       <h1>Deep Research</h1>
       <p className="subtitle">

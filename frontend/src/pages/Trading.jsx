@@ -168,7 +168,11 @@ export default function Trading({ active }) {
     setDraft("");
   }, []);
   return (
-    <main id="trading" className={"page" + (active ? " active" : "")}>
+    <main
+      id="trading"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="trading-heading">
         <div>
           <div className="eyebrow">ROBINHOOD · $20 TRIAL</div>

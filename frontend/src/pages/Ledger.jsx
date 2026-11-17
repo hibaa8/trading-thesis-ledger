@@ -45,7 +45,11 @@ export function History({ active, onOpen }) {
     return () => c.abort();
   }, [active]);
   return (
-    <main id="runs" className={"page" + (active ? " active" : "")}>
+    <main
+      id="runs"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="eyebrow">REPRODUCIBLE BY DESIGN</div>
       <h1>Research history.</h1>
       <p className="subtitle">
@@ -129,7 +133,11 @@ export function Ledger({ active, config, onOpen, onDeep }) {
   }
   return (
     <>
-      <main id="memory" className={"page" + (active ? " active" : "")}>
+      <main
+        id="memory"
+        hidden={!active}
+        className={"page" + (active ? " active" : "")}
+      >
         <div className="eyebrow">MEMORY THAT CAN CHANGE ITS MIND</div>
         <h1>The thesis ledger.</h1>
         <p className="subtitle">

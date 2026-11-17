@@ -58,7 +58,11 @@ export default function Forecast({ active, ready, ticker }) {
     if (active && ready && !result && !busyRef.current) run(ticker);
   }, [active, ready, ticker]);
   return (
-    <main id="forecast" className={"page" + (active ? " active" : "")}>
+    <main
+      id="forecast"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="eyebrow">MARKET FORECAST</div>
       <h1>Price scenarios</h1>
       <p className="subtitle">

@@ -96,7 +96,11 @@ export default function Market({
     }
   }
   return (
-    <main id="research" className={"page" + (active ? " active" : "")}>
+    <main
+      id="research"
+      hidden={!active}
+      className={"page" + (active ? " active" : "")}
+    >
       <div className="title-row">
         <div>
           <div className="eyebrow">U.S. EQUITIES</div>
